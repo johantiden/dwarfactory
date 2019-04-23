@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AngleComponent;
 import com.github.johantiden.dwarfactory.components.AngularSpeedComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
@@ -24,7 +24,13 @@ import com.github.johantiden.dwarfactory.systems.MovementSystem;
 import com.github.johantiden.dwarfactory.systems.RenderSystem;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+
+import static com.badlogic.gdx.math.MathUtils.random;
 
 public class Dwarfactory extends ApplicationAdapter {
 
@@ -33,11 +39,14 @@ public class Dwarfactory extends ApplicationAdapter {
     public static final int TILE_SIZE = 100;
 
     private SpriteBatch debugBatch;
+    private SpriteBatch backgroundBatch;
 
     private BitmapFont font;
     private PooledEngine engine;
     private ShapeRenderer shapeRenderer;
     private OrthographicCamera camera;
+    private List<Texture> tileTextures = new ArrayList<>();
+    private Map<Integer, Texture> map;
 
     private static BitmapFont getFont() {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PlayfairDisplay-Regular.ttf"));
@@ -53,16 +62,25 @@ public class Dwarfactory extends ApplicationAdapter {
         Random random = new SecureRandom();
 
         Texture crateTexture = new Texture(Gdx.files.internal("crate.jpg"), true);
+        tileTextures.add(new Texture(Gdx.files.internal("tile_001.jpg"), true));
+        tileTextures.add(new Texture(Gdx.files.internal("tile_002.jpg"), true));
+        tileTextures.add(new Texture(Gdx.files.internal("tile_003.jpg"), true));
+        tileTextures.add(new Texture(Gdx.files.internal("tile_004.jpg"), true));
+
+        map = createMap(tileTextures);
+
+
         crateTexture.setFilter(Texture.TextureFilter.MipMapNearestNearest, Texture.TextureFilter.MipMapNearestNearest);
 
 		debugBatch = new SpriteBatch();
+		backgroundBatch = new SpriteBatch();
 		font = getFont();
         shapeRenderer = new ShapeRenderer(100);
 
         engine = new PooledEngine();
 
         camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-        camera.position.set(VIEWPORT_WIDTH/2,VIEWPORT_HEIGHT/2, 0);
+        camera.position.set(0, 0, 0);
         camera.update();
         Entity cameraEntity = engine.createEntity();
         cameraEntity.add(new PositionComponent(0, 0));
@@ -79,7 +97,7 @@ public class Dwarfactory extends ApplicationAdapter {
 
         for (int i = 0; i < 100; i++) {
             Entity box = engine.createEntity();
-            box.add(new PositionComponent(MathUtils.random(VIEWPORT_WIDTH), MathUtils.random(VIEWPORT_HEIGHT)));
+            box.add(new PositionComponent(random(VIEWPORT_WIDTH), random(VIEWPORT_HEIGHT)));
             box.add(new SpeedComponent(random.nextFloat()*30-15, random.nextFloat()*30-15));
             box.add(new VisualComponent(coinRegion));
             engine.addEntity(box);
@@ -88,6 +106,17 @@ public class Dwarfactory extends ApplicationAdapter {
         MyInputProcessor inputProcessor = new MyInputProcessor(camera);
         Gdx.input.setInputProcessor(inputProcessor);
 
+    }
+
+    private static final int mapWidth = 100;
+    private static final int mapHeight = 100;
+    private static Map<Integer, Texture> createMap(List<Texture> tileTextures) {
+        Map<Integer, Texture> map = new HashMap<>();
+        for (int i = 0; i < mapWidth * mapHeight; i++) {
+            Texture texture = tileTextures.get(random.nextInt(tileTextures.size()));
+            map.put(i, texture);
+        }
+        return map;
     }
 
     public static void log(String string) {
@@ -101,7 +130,32 @@ public class Dwarfactory extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0.3f, 0.3f, 0.5f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        drawBackground();
+
         engine.update(Gdx.graphics.getDeltaTime());
+
+        drawDebug(fps);
+    }
+
+    private void drawBackground() {
+        backgroundBatch.begin();
+        backgroundBatch.setProjectionMatrix(camera.combined);
+
+        float xOffset = -mapWidth/2f*TILE_SIZE;
+        float yOffset = -mapHeight/2f*TILE_SIZE;
+        for (int y = 0; y < mapHeight; y++) {
+            for (int x = 0; x < mapWidth; x++) {
+                Texture texture = map.get(y * mapWidth + x);
+                if (texture == null) {
+                    throw new RuntimeException();
+                }
+                backgroundBatch.draw(texture, TILE_SIZE * x + xOffset, TILE_SIZE * y + yOffset, TILE_SIZE, TILE_SIZE);
+            }
+        }
+        backgroundBatch.end();
+    }
+
+    private void drawDebug(int fps) {
 
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -113,21 +167,14 @@ public class Dwarfactory extends ApplicationAdapter {
 
         shapeRenderer.setColor(0, 1, 0, 1);
 
-        for (int x = 0; x < 10; x++) {
-            for (int y = 0; y < 10; y++) {
-                shapeRenderer.rect(TILE_SIZE*x, TILE_SIZE*y, TILE_SIZE, TILE_SIZE);
-            }
-        }
-
         shapeRenderer.end();
 
-
         debugBatch.begin();
-        font.draw(debugBatch, "" + fps, 10, 100);
-		debugBatch.end();
+        font.draw(debugBatch, "" + fps, 10, 50);
+        debugBatch.end();
     }
-	
-	@Override
+
+    @Override
 	public void dispose () {
 		debugBatch.dispose();
 	}
