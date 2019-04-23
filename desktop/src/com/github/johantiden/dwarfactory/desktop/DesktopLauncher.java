@@ -13,7 +13,7 @@ public class DesktopLauncher {
 
         config.title = "Dwarfactory";
         config.fullscreen = true;
-        config.foregroundFPS = 30;
+        config.foregroundFPS = 60;
         LwjglApplication lwjglApplication = new LwjglApplication(new Dwarfactory(), config);
 
         Gdx.app.log("DesktopLauncher", "Started");

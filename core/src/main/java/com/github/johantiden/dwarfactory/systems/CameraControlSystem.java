@@ -7,19 +7,20 @@ import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.github.johantiden.dwarfactory.components.AngularSpeedComponent;
+import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 
 public class CameraControlSystem extends EntitySystem {
 
-    private static final float VELOCITY_FROM_KEY_PANNING = 200;
+    private static final float ACCELERATION_FROM_KEY_PANNING = 1000;
     private static final int CAMERA_ROTATION_SPEED = 60;
-    private static final boolean ALLOW_ROTATION = false;
+//    private static final boolean ALLOW_ROTATION = false;
 
     private final OrthographicCamera camera;
     private final Entity cameraEntity;
     private final ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
-    private final ComponentMapper<AngularSpeedComponent> am = ComponentMapper.getFor(AngularSpeedComponent.class);
+    private final ComponentMapper<AccelerationComponent> am = ComponentMapper.getFor(AccelerationComponent.class);
+//    private final ComponentMapper<AngularSpeedComponent> angularMapper = ComponentMapper.getFor(AngularSpeedComponent.class);
 
     public CameraControlSystem(OrthographicCamera camera, Entity cameraEntity) {
         this.camera = camera;
@@ -37,24 +38,36 @@ public class CameraControlSystem extends EntitySystem {
     @Override
     public void update(float deltaTime) {
         controlMovement();
-        if (ALLOW_ROTATION) {
-            controlRotation();
-        }
+//        if (ALLOW_ROTATION) {
+//            controlRotation();
+//        }
     }
 
-    private void controlRotation() {
-        float deltaAngle = getDeltaAngle();
-        AngularSpeedComponent angularSpeedComponent = am.get(cameraEntity);
-        angularSpeedComponent.angularSpeed = deltaAngle;
-    }
+//    private void controlRotation() {
+//        float deltaAngle = getDeltaAngle();
+//        AngularSpeedComponent angularSpeedComponent = am.get(cameraEntity);
+//        angularSpeedComponent.angularSpeed = deltaAngle;
+//    }
 
     private void controlMovement() {
         float deltaX = getDeltaX();
         float deltaY = getDeltaY();
 
-        SpeedComponent speedComponent = mm.get(cameraEntity);
-        speedComponent.speedX = deltaX * camera.zoom;
-        speedComponent.speedY = deltaY * camera.zoom;
+        if (isBreak()) {
+            SpeedComponent speedComponent = mm.get(cameraEntity);
+            AccelerationComponent accelerationComponent = am.get(cameraEntity);
+            accelerationComponent.acceleration.x = -speedComponent.speed.x*2;
+            accelerationComponent.acceleration.y = -speedComponent.speed.y*2;
+        } else {
+            AccelerationComponent accelerationComponent = am.get(cameraEntity);
+            accelerationComponent.acceleration.x = deltaX * camera.zoom;
+            accelerationComponent.acceleration.y = deltaY * camera.zoom;
+        }
+    }
+
+    private boolean isBreak() {
+        return isLeft() == isRight() &&
+                isUp() == isDown();
     }
 
     private float getDeltaAngle() {
@@ -71,28 +84,44 @@ public class CameraControlSystem extends EntitySystem {
     }
 
     private float getDeltaX() {
-        boolean isLeft = Gdx.input.isKeyPressed(Input.Keys.A);
-        boolean isRight = Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean isLeft = isLeft();
+        boolean isRight = isRight();
 
         if (isLeft == isRight) {
             return 0;
         } else if (isLeft) {
-            return -VELOCITY_FROM_KEY_PANNING;
+            return -ACCELERATION_FROM_KEY_PANNING;
         } else /*isRight*/ {
-            return VELOCITY_FROM_KEY_PANNING;
+            return ACCELERATION_FROM_KEY_PANNING;
         }
     }
 
+    private boolean isRight() {
+        return Gdx.input.isKeyPressed(Input.Keys.D);
+    }
+
+    private boolean isLeft() {
+        return Gdx.input.isKeyPressed(Input.Keys.A);
+    }
+
     private float getDeltaY() {
-        boolean isUp = Gdx.input.isKeyPressed(Input.Keys.W);
-        boolean isDown = Gdx.input.isKeyPressed(Input.Keys.S);
+        boolean isUp = isUp();
+        boolean isDown = isDown();
 
         if (isUp == isDown) {
             return 0;
         } else if (isUp) {
-            return VELOCITY_FROM_KEY_PANNING;
+            return ACCELERATION_FROM_KEY_PANNING;
         } else /*isDown*/ {
-            return -VELOCITY_FROM_KEY_PANNING;
+            return -ACCELERATION_FROM_KEY_PANNING;
         }
+    }
+
+    private boolean isDown() {
+        return Gdx.input.isKeyPressed(Input.Keys.S);
+    }
+
+    private boolean isUp() {
+        return Gdx.input.isKeyPressed(Input.Keys.W);
     }
 }

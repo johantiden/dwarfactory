@@ -16,8 +16,6 @@ import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 
 public class RenderSystem extends EntitySystem {
-    private static final float PI = (float) Math.PI;
-
     private ImmutableArray<Entity> entities;
 
     private final SpriteBatch batch;
@@ -54,10 +52,10 @@ public class RenderSystem extends EntitySystem {
     public void update(float deltaTime) {
 
         PositionComponent cameraPosition = pm.get(cameraEntity);
-        float cameraDx = cameraPosition.x - lastCameraPosition.x;
-        float cameraDy = cameraPosition.y - lastCameraPosition.y;
-        lastCameraPosition.x = cameraPosition.x;
-        lastCameraPosition.y = cameraPosition.y;
+        float cameraDx = cameraPosition.position.x - lastCameraPosition.position.x;
+        float cameraDy = cameraPosition.position.y - lastCameraPosition.position.y;
+        lastCameraPosition.position.x = cameraPosition.position.x;
+        lastCameraPosition.position.y = cameraPosition.position.y;
 
         AngleComponent cameraAngle = am.get(cameraEntity);
         float cameraDr = cameraAngle.angle - lastCameraAngle.angle;
@@ -78,9 +76,9 @@ public class RenderSystem extends EntitySystem {
 
             if (sm.has(e)) {
                 SpeedComponent speedComponent = sm.get(e);
-                batch.draw(getTextureFromState(visual.region, speedComponent), position.x, position.y, 32, 32);
+                batch.draw(getTextureFromState(visual.region, speedComponent), position.position.x, position.position.y, 32, 32);
             } else {
-                batch.draw(visual.region, position.x, position.y, 32, 32);
+                batch.draw(visual.region, position.position.x, position.position.y, 32, 32);
 
             }
         }
@@ -90,7 +88,7 @@ public class RenderSystem extends EntitySystem {
 
     private TextureRegion getTextureFromState(TextureRegion region, SpeedComponent speedComponent) {
 
-        double angle = (double) new Vector2(speedComponent.speedX, speedComponent.speedY).angle();
+        double angle = (double) new Vector2(speedComponent.speed.x, speedComponent.speed.y).angle();
 
         if (angle >= 225 && angle <= 315) {
             // down

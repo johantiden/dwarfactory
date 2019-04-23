@@ -7,24 +7,24 @@ import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.github.johantiden.dwarfactory.Dwarfactory;
+import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
-import com.github.johantiden.dwarfactory.components.PositionComponent;
 
-public class MovementSystem extends EntitySystem {
+public class AccelerationSystem extends EntitySystem {
     public ImmutableArray<Entity> entities;
 
-    private ComponentMapper<PositionComponent> pm = ComponentMapper.getFor(PositionComponent.class);
+    private ComponentMapper<AccelerationComponent> am = ComponentMapper.getFor(AccelerationComponent.class);
     private ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
 
     @Override
     public void addedToEngine (Engine engine) {
-        entities = engine.getEntitiesFor(Family.all(PositionComponent.class, SpeedComponent.class).get());
-        Dwarfactory.log("MovementSystem added to engine.");
+        entities = engine.getEntitiesFor(Family.all(AccelerationComponent.class, SpeedComponent.class).get());
+        Dwarfactory.log("AccelerationSystem added to engine.");
     }
 
     @Override
     public void removedFromEngine (Engine engine) {
-        Dwarfactory.log("MovementSystem removed from engine.");
+        Dwarfactory.log("AccelerationSystem removed from engine.");
         entities = null;
     }
 
@@ -34,17 +34,11 @@ public class MovementSystem extends EntitySystem {
         for (int i = 0; i < entities.size(); ++i) {
             Entity e = entities.get(i);
 
-            PositionComponent p = pm.get(e);
+            AccelerationComponent a = am.get(e);
             SpeedComponent s = mm.get(e);
 
-            if (s.speed.len() > s.maxSpeed) {
-                s.speed.setLength(s.maxSpeed);
-            }
-
-            p.position.x += s.speed.x * deltaTime;
-            p.position.y += s.speed.y * deltaTime;
+            s.speed.x += a.acceleration.x * deltaTime;
+            s.speed.y += a.acceleration.y * deltaTime;
         }
-
-//            log(entities.size() + " Entities updated in MovementSystem.");
     }
 }

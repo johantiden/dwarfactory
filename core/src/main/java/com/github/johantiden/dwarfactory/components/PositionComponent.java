@@ -1,13 +1,16 @@
 package com.github.johantiden.dwarfactory.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.math.Vector2;
 
 public class PositionComponent implements Component {
-    public float x;
-    public float y;
+    public final Vector2 position;
 
-    public PositionComponent (float x, float y) {
-        this.x = x;
-        this.y = y;
+    public PositionComponent(Vector2 position) {
+        this.position = position;
+    }
+
+    public PositionComponent(float x, float y) {
+        this(new Vector2(x, y));
     }
 }
