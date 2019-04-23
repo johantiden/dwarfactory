@@ -26,7 +26,7 @@ import com.github.johantiden.dwarfactory.systems.RenderSystem;
 import java.security.SecureRandom;
 import java.util.Random;
 
-public class MyGdxGame extends ApplicationAdapter {
+public class Dwarfactory extends ApplicationAdapter {
 
     public static final int VIEWPORT_WIDTH = 2880;
     public static final int VIEWPORT_HEIGHT = 1620;

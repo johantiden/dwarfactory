@@ -6,7 +6,7 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.utils.ImmutableArray;
-import com.github.johantiden.dwarfactory.MyGdxGame;
+import com.github.johantiden.dwarfactory.Dwarfactory;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 
@@ -19,12 +19,12 @@ public class MovementSystem extends EntitySystem {
     @Override
     public void addedToEngine (Engine engine) {
         entities = engine.getEntitiesFor(Family.all(PositionComponent.class, SpeedComponent.class).get());
-        MyGdxGame.log("MovementSystem added to engine.");
+        Dwarfactory.log("MovementSystem added to engine.");
     }
 
     @Override
     public void removedFromEngine (Engine engine) {
-        MyGdxGame.log("MovementSystem removed from engine.");
+        Dwarfactory.log("MovementSystem removed from engine.");
         entities = null;
     }
 

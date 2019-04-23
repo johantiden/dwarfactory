@@ -7,7 +7,7 @@
 	<inherits name='com.badlogic.ashley_gwt' />
 	<inherits name='com.github.czyzby.kiwi.GdxKiwi' />
 
-	<inherits name='MyGdxGame' />
+	<inherits name='Dwarfactory' />
 	<entry-point class='com.github.johantiden.dwarfactory.client.HtmlLauncher' />
 	<set-configuration-property name='xsiframe.failIfScriptTag' value='FALSE'/>
 	<set-configuration-property name="gdx.assetpath" value="../core/assets" />

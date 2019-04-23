@@ -14,6 +14,7 @@ public class CameraControlSystem extends EntitySystem {
 
     private static final float VELOCITY_FROM_KEY_PANNING = 200;
     private static final int CAMERA_ROTATION_SPEED = 60;
+    private static final boolean ALLOW_ROTATION = false;
 
     private final OrthographicCamera camera;
     private final Entity cameraEntity;
@@ -35,17 +36,25 @@ public class CameraControlSystem extends EntitySystem {
 
     @Override
     public void update(float deltaTime) {
+        controlMovement();
+        if (ALLOW_ROTATION) {
+            controlRotation();
+        }
+    }
+
+    private void controlRotation() {
+        float deltaAngle = getDeltaAngle();
+        AngularSpeedComponent angularSpeedComponent = am.get(cameraEntity);
+        angularSpeedComponent.angularSpeed = deltaAngle;
+    }
+
+    private void controlMovement() {
         float deltaX = getDeltaX();
         float deltaY = getDeltaY();
 
         SpeedComponent speedComponent = mm.get(cameraEntity);
         speedComponent.speedX = deltaX * camera.zoom;
         speedComponent.speedY = deltaY * camera.zoom;
-
-
-        float deltaAngle = getDeltaAngle();
-        AngularSpeedComponent angularSpeedComponent = am.get(cameraEntity);
-        angularSpeedComponent.angularSpeed = deltaAngle;
     }
 
     private float getDeltaAngle() {

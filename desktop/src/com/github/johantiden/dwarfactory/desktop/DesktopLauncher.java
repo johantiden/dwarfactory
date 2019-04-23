@@ -3,7 +3,7 @@ package com.github.johantiden.dwarfactory.desktop;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.github.johantiden.dwarfactory.MyGdxGame;
+import com.github.johantiden.dwarfactory.Dwarfactory;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
@@ -11,10 +11,10 @@ public class DesktopLauncher {
         config.width = 2880;
         config.height = 1620;
 
-        config.title = "MyGdxGame";
+        config.title = "Dwarfactory";
         config.fullscreen = true;
         config.foregroundFPS = 30;
-        LwjglApplication lwjglApplication = new LwjglApplication(new MyGdxGame(), config);
+        LwjglApplication lwjglApplication = new LwjglApplication(new Dwarfactory(), config);
 
         Gdx.app.log("DesktopLauncher", "Started");
 
