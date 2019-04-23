@@ -47,6 +47,8 @@ public class Dwarfactory extends ApplicationAdapter {
     private OrthographicCamera camera;
     private List<Texture> tileTextures = new ArrayList<>();
     private Map<Integer, Texture> map;
+    private TextureRegion factoryTexture;
+    private static final float TILE_BUILDING_INSET = 10;
 
     private static BitmapFont getFont() {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PlayfairDisplay-Regular.ttf"));
@@ -68,6 +70,10 @@ public class Dwarfactory extends ApplicationAdapter {
         tileTextures.add(new Texture(Gdx.files.internal("tile_004.jpg"), true));
 
         map = createMap(tileTextures);
+
+        factoryTexture = new TextureRegion(
+                new Texture(Gdx.files.internal("buildings.png"), true),
+                0, 1304, 128, 128);
 
 
         boiTexture.setFilter(Texture.TextureFilter.MipMapNearestNearest, Texture.TextureFilter.MipMapNearestNearest);
@@ -94,7 +100,6 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(new AngularMovementSystem());
 
         TextureRegion boiRegion = new TextureRegion(boiTexture);
-
         for (int i = 0; i < 100; i++) {
             Entity box = engine.createEntity();
             box.add(new PositionComponent(random(VIEWPORT_WIDTH), random(VIEWPORT_HEIGHT)));
@@ -152,6 +157,10 @@ public class Dwarfactory extends ApplicationAdapter {
                 backgroundBatch.draw(texture, TILE_SIZE * x + xOffset, TILE_SIZE * y + yOffset, TILE_SIZE, TILE_SIZE);
             }
         }
+
+        backgroundBatch.draw(factoryTexture, TILE_SIZE*3+TILE_BUILDING_INSET, TILE_SIZE*7+TILE_BUILDING_INSET, TILE_SIZE-TILE_BUILDING_INSET*2, TILE_SIZE-TILE_BUILDING_INSET*2);
+        backgroundBatch.draw(factoryTexture, TILE_SIZE*6+TILE_BUILDING_INSET, TILE_SIZE*4+TILE_BUILDING_INSET, TILE_SIZE-TILE_BUILDING_INSET*2, TILE_SIZE-TILE_BUILDING_INSET*2);
+
         backgroundBatch.end();
     }
 
