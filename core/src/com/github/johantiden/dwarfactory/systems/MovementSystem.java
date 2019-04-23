@@ -1,0 +1,46 @@
+package com.github.johantiden.dwarfactory.systems;
+
+import com.badlogic.ashley.core.ComponentMapper;
+import com.badlogic.ashley.core.Engine;
+import com.badlogic.ashley.core.Entity;
+import com.badlogic.ashley.core.EntitySystem;
+import com.badlogic.ashley.core.Family;
+import com.badlogic.ashley.utils.ImmutableArray;
+import com.github.johantiden.dwarfactory.MyGdxGame;
+import com.github.johantiden.dwarfactory.components.SpeedComponent;
+import com.github.johantiden.dwarfactory.components.PositionComponent;
+
+public class MovementSystem extends EntitySystem {
+    public ImmutableArray<Entity> entities;
+
+    private ComponentMapper<PositionComponent> pm = ComponentMapper.getFor(PositionComponent.class);
+    private ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
+
+    @Override
+    public void addedToEngine (Engine engine) {
+        entities = engine.getEntitiesFor(Family.all(PositionComponent.class, SpeedComponent.class).get());
+        MyGdxGame.log("MovementSystem added to engine.");
+    }
+
+    @Override
+    public void removedFromEngine (Engine engine) {
+        MyGdxGame.log("MovementSystem removed from engine.");
+        entities = null;
+    }
+
+    @Override
+    public void update (float deltaTime) {
+
+        for (int i = 0; i < entities.size(); ++i) {
+            Entity e = entities.get(i);
+
+            PositionComponent p = pm.get(e);
+            SpeedComponent m = mm.get(e);
+
+            p.x += m.speedX * deltaTime;
+            p.y += m.speedY * deltaTime;
+        }
+
+//            log(entities.size() + " Entities updated in MovementSystem.");
+    }
+}
