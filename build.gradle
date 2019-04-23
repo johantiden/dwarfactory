@@ -41,6 +41,8 @@ allprojects {
 project(":desktop") {
     apply plugin: "java"
 
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
 
     dependencies {
         compile project(":core")
@@ -75,6 +77,8 @@ project(":html") {
 project(":core") {
     apply plugin: "java"
 
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
 
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
@@ -84,7 +88,7 @@ project(":core") {
         compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
         compile "com.underwaterapps.overlap2druntime:overlap2d-runtime-libgdx:0.1.0"
         compile "com.github.czyzby:gdx-kiwi:1.9.1.9.6"
-        
+        testCompile "junit:junit:4.12"
     }
 }
 

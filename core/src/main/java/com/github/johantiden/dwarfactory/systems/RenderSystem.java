@@ -8,11 +8,16 @@ import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AngleComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
+import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 
 public class RenderSystem extends EntitySystem {
+    private static final float PI = (float) Math.PI;
+
     private ImmutableArray<Entity> entities;
 
     private final SpriteBatch batch;
@@ -25,6 +30,7 @@ public class RenderSystem extends EntitySystem {
 
     private final ComponentMapper<AngleComponent> am = ComponentMapper.getFor(AngleComponent.class);
     private final ComponentMapper<PositionComponent> pm = ComponentMapper.getFor(PositionComponent.class);
+    private final ComponentMapper<SpeedComponent> sm = ComponentMapper.getFor(SpeedComponent.class);
     private final ComponentMapper<VisualComponent> vm = ComponentMapper.getFor(VisualComponent.class);
 
     public RenderSystem(Camera camera, Entity cameraEntity) {
@@ -70,9 +76,38 @@ public class RenderSystem extends EntitySystem {
             PositionComponent position = pm.get(e);
             VisualComponent visual = vm.get(e);
 
-            batch.draw(visual.region, position.x, position.y, 32, 32);
+            if (sm.has(e)) {
+                SpeedComponent speedComponent = sm.get(e);
+                batch.draw(getTextureFromState(visual.region, speedComponent), position.x, position.y, 32, 32);
+            } else {
+                batch.draw(visual.region, position.x, position.y, 32, 32);
+
+            }
         }
 
         batch.end();
     }
+
+    private TextureRegion getTextureFromState(TextureRegion region, SpeedComponent speedComponent) {
+
+        double angle = (double) new Vector2(speedComponent.speedX, speedComponent.speedY).angle();
+
+        if (angle >= 225 && angle <= 315) {
+            // down
+            return new TextureRegion(region, 10, 20, 10, 10);
+        }
+
+        if (angle >= 45 && angle <= 135) {
+            // up
+            return new TextureRegion(region, 10, 0, 10, 10);
+        }
+
+        if (angle >= 135 && angle <= 225) {
+            // left, flip the image
+            return new TextureRegion(region, 20, 10, -10, 10);
+        }
+
+        return new TextureRegion(region, 10, 10, 10, 10);
+    }
+
 }

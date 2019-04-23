@@ -61,7 +61,7 @@ public class Dwarfactory extends ApplicationAdapter {
 	public void create () {
         Random random = new SecureRandom();
 
-        Texture crateTexture = new Texture(Gdx.files.internal("crate.jpg"), true);
+        Texture boiTexture = new Texture(Gdx.files.internal("simple_10x10_character.png"), true);
         tileTextures.add(new Texture(Gdx.files.internal("tile_001.jpg"), true));
         tileTextures.add(new Texture(Gdx.files.internal("tile_002.jpg"), true));
         tileTextures.add(new Texture(Gdx.files.internal("tile_003.jpg"), true));
@@ -70,7 +70,7 @@ public class Dwarfactory extends ApplicationAdapter {
         map = createMap(tileTextures);
 
 
-        crateTexture.setFilter(Texture.TextureFilter.MipMapNearestNearest, Texture.TextureFilter.MipMapNearestNearest);
+        boiTexture.setFilter(Texture.TextureFilter.MipMapNearestNearest, Texture.TextureFilter.MipMapNearestNearest);
 
 		debugBatch = new SpriteBatch();
 		backgroundBatch = new SpriteBatch();
@@ -93,13 +93,13 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(new MovementSystem());
         engine.addSystem(new AngularMovementSystem());
 
-        TextureRegion coinRegion = new TextureRegion(crateTexture);
+        TextureRegion boiRegion = new TextureRegion(boiTexture);
 
         for (int i = 0; i < 100; i++) {
             Entity box = engine.createEntity();
             box.add(new PositionComponent(random(VIEWPORT_WIDTH), random(VIEWPORT_HEIGHT)));
             box.add(new SpeedComponent(random.nextFloat()*30-15, random.nextFloat()*30-15));
-            box.add(new VisualComponent(coinRegion));
+            box.add(new VisualComponent(boiRegion));
             engine.addEntity(box);
         }
 
