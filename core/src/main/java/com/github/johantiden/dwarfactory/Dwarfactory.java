@@ -25,11 +25,11 @@ import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.AccelerationSystem;
 import com.github.johantiden.dwarfactory.systems.AngularMovementSystem;
-import com.github.johantiden.dwarfactory.systems.BackgroundRenderSystem;
+import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.CameraUpdateSystem;
 import com.github.johantiden.dwarfactory.systems.MovementSystem;
-import com.github.johantiden.dwarfactory.systems.ForegroundRenderSystem;
+import com.github.johantiden.dwarfactory.systems.RenderForegroundSystem;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 import com.github.johantiden.dwarfactory.util.TextureUtil;
 
@@ -74,7 +74,6 @@ public class Dwarfactory extends ApplicationAdapter {
         tileTextures.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_003.jpg")));
         tileTextures.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_004.jpg")));
 
-
 		debugBatch = new SpriteBatch();
 		font = getFont();
 
@@ -97,28 +96,35 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(new AngularMovementSystem());
         engine.addSystem(new CameraUpdateSystem(camera, cameraEntity));
         World world = new World(tileTextures);
-        engine.addSystem(new BackgroundRenderSystem(camera, world));
-        ForegroundRenderSystem foregroundRenderSystem = new ForegroundRenderSystem(camera);
-        engine.addSystem(foregroundRenderSystem);
+        engine.addSystem(new RenderBackgroundSystem(camera, world));
+        RenderForegroundSystem renderForegroundSystem = new RenderForegroundSystem(camera);
+        engine.addSystem(renderForegroundSystem);
 
-        Texture boiTexture = TextureUtil.loadTextureWithMipMap("simple_10x10_character.png");
-        for (int i = 0; i < NUM_BOIS; i++) {
-            createBoi(random, boiTexture);
-        }
 
+        MyInputProcessor inputProcessor = new MyInputProcessor(camera, screenCoordinates -> {
+            renderForegroundSystem.onMouseMoved(screenCoordinates);
+            this.onMouseMoved(screenCoordinates);
+        });
+        Gdx.input.setInputProcessor(inputProcessor);
+
+        createFactories();
+        createBois(random);
+    }
+
+    private void createFactories() {
         TextureRegion factoryTexture = new TextureRegion(
                 new Texture(Gdx.files.internal("buildings.png"), true),
                 0, 1304, 128, 128);
 
         createFactory(new TileCoordinate(3,7), factoryTexture);
         createFactory(new TileCoordinate(7,4), factoryTexture);
+    }
 
-        MyInputProcessor inputProcessor = new MyInputProcessor(camera, screenCoordinates -> {
-            foregroundRenderSystem.onMouseMoved(screenCoordinates);
-            this.onMouseMoved(screenCoordinates);
-        });
-        Gdx.input.setInputProcessor(inputProcessor);
-
+    private void createBois(Random random) {
+        Texture boiTexture = TextureUtil.loadTextureWithMipMap("simple_10x10_character.png");
+        for (int i = 0; i < NUM_BOIS; i++) {
+            createBoi(random, boiTexture);
+        }
     }
 
     private void onMouseMoved(ImmutableVector2Int screenCoordinates) {

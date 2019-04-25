@@ -12,12 +12,12 @@ import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 
-public class BackgroundRenderSystem extends EntitySystem {
+public class RenderBackgroundSystem extends EntitySystem {
     private final SpriteBatch backgroundBatch;
     private final Camera camera;
     private final World world;
 
-    public BackgroundRenderSystem(Camera camera, World world) {
+    public RenderBackgroundSystem(Camera camera, World world) {
         this.world = world;
         this.camera = camera;
 

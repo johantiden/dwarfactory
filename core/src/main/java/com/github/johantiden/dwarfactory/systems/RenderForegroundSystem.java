@@ -22,7 +22,7 @@ import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 
-public class ForegroundRenderSystem extends EntitySystem {
+public class RenderForegroundSystem extends EntitySystem {
     private ImmutableVector2Int mouseScreenCoordinates;
     private final Texture mouseTileTexture;
 
@@ -38,7 +38,7 @@ public class ForegroundRenderSystem extends EntitySystem {
     private final ComponentMapper<VisualComponent> vm = ComponentMapper.getFor(VisualComponent.class);
     private final ComponentMapper<SizeComponent> sizeManager = ComponentMapper.getFor(SizeComponent.class);
 
-    public ForegroundRenderSystem(Camera camera) {
+    public RenderForegroundSystem(Camera camera) {
         this.batch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer(100);
         this.camera = camera;
