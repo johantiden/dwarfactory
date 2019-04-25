@@ -3,9 +3,11 @@ package com.github.johantiden.dwarfactory.game;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.github.johantiden.dwarfactory.Dwarfactory;
+import com.github.johantiden.dwarfactory.game.assets.Assets;
 import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,17 +26,15 @@ public class World {
             Dwarfactory.VIEWPORT_WIDTH*2,
             Dwarfactory.VIEWPORT_HEIGHT*2);
 
-    private final List<TextureRegion> tileTextures;
     private Object sync = new Object();
 
-    public World(List<TextureRegion> tileTextures) {
-        this.tileTextures = tileTextures;
+    public World(Iterable<TextureRegion> tileTextures) {
         map = new HashMap<>();
         ensureWorldIsLargeEnoughToRender(INITIAL_CLIP_WORLD);
     }
 
-    private static TextureRegion randomTexture(List<TextureRegion> tileTextures) {
-        return tileTextures.get(random.nextInt(tileTextures.size()));
+    private static TextureRegion randomTexture() {
+        return Assets.Tiles.TILES.get(random.nextInt(Assets.Tiles.TILES.size()));
     }
 
     public void forEachBackgroundTile(Rectangle clip, Consumer<BackgroundTile> consumer) {
@@ -74,7 +74,7 @@ public class World {
 
     private Function<TileCoordinate, BackgroundTile> tileFactory() {
         return tileCoordinate -> {
-            TextureRegion textureRegion = randomTexture(tileTextures);
+            TextureRegion textureRegion = randomTexture();
             return new BackgroundTile(tileCoordinate, textureRegion);
         };
     }
