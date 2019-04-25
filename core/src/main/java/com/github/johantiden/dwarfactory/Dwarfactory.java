@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.AngleComponent;
 import com.github.johantiden.dwarfactory.components.AngularSpeedComponent;
@@ -19,17 +20,20 @@ import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.World;
 import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.AccelerationSystem;
 import com.github.johantiden.dwarfactory.systems.AngularMovementSystem;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.MovementSystem;
 import com.github.johantiden.dwarfactory.systems.RenderSystem;
+import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 import com.github.johantiden.dwarfactory.util.TextureUtil;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import static com.badlogic.gdx.math.MathUtils.random;
@@ -45,11 +49,13 @@ public class Dwarfactory extends ApplicationAdapter {
     private BitmapFont font;
     private PooledEngine engine;
     private final List<TextureRegion> tileTextures = new ArrayList<>();
+    private ImmutableVector2Int mouseScreenCoordinates;
+    private OrthographicCamera camera;
 
     private static BitmapFont getFont() {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PlayfairDisplay-Regular.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 48;
+        parameter.size = 32;
         BitmapFont font12 = generator.generateFont(parameter); // font size 12 pixels
         generator.dispose(); // don't forget to dispose to avoid memory leaks!
         return font12;
@@ -69,7 +75,7 @@ public class Dwarfactory extends ApplicationAdapter {
 
         engine = new PooledEngine();
 
-        OrthographicCamera camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+        camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.position.set(0, 0, 0);
         camera.setToOrtho(true);
         camera.update();
@@ -92,9 +98,16 @@ public class Dwarfactory extends ApplicationAdapter {
             createBoi(random, boiTexture);
         }
 
-        MyInputProcessor inputProcessor = new MyInputProcessor(camera, renderSystem::onMouseMoved);
+        MyInputProcessor inputProcessor = new MyInputProcessor(camera, screenCoordinates -> {
+            renderSystem.onMouseMoved(screenCoordinates);
+            this.onMouseMoved(screenCoordinates);
+        });
         Gdx.input.setInputProcessor(inputProcessor);
 
+    }
+
+    private void onMouseMoved(ImmutableVector2Int screenCoordinates) {
+        this.mouseScreenCoordinates = screenCoordinates;
     }
 
     private void createBoi(Random random, Texture boiTexture) {
@@ -124,22 +137,47 @@ public class Dwarfactory extends ApplicationAdapter {
 
 	@Override
 	public void render () {
-        int fps = Gdx.graphics.getFramesPerSecond();
 
 		Gdx.gl.glClearColor(0.3f, 0.3f, 0.5f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         engine.update(Gdx.graphics.getDeltaTime());
 
-        drawDebug(fps);
+        drawDebug();
     }
 
 
-    private void drawDebug(int fps) {
+    private void drawDebug() {
+        int fps = Gdx.graphics.getFramesPerSecond();
 
+        List<String> debugLines = new ArrayList<>();
+
+        debugLines.add("fps: " + fps);
+        debugLines.addAll(getMouseCoordinatesInDifferentSpaces());
+
+
+        Collections.reverse(debugLines);
         debugBatch.begin();
-        font.draw(debugBatch, "" + fps, 10, 50);
+        int rowHeight = 50;
+        for (int i = 0; i < debugLines.size(); i++) {
+            font.draw(debugBatch, debugLines.get(i), 10, rowHeight*(i+1));
+        }
+//        font.draw(debugBatch, "" + fps, 10, 50);
         debugBatch.end();
+    }
+
+    private List<String> getMouseCoordinatesInDifferentSpaces() {
+        ArrayList<String> strings = new ArrayList<>();
+        if (mouseScreenCoordinates == null) {
+            strings.add("");
+            strings.add("");
+            strings.add("");
+        } else {
+            strings.add("mouse.screen: "+ mouseScreenCoordinates.toString());
+            strings.add("mouse.world: " + CoordinateUtil.screenToWorld(mouseScreenCoordinates, camera).toString());
+            strings.add("mouse.tile: " + CoordinateUtil.screenToTile(mouseScreenCoordinates, camera).toString());
+        }
+        return strings;
     }
 
     @Override

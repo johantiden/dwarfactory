@@ -2,7 +2,7 @@ package com.github.johantiden.dwarfactory.math;
 
 import java.util.Objects;
 
-public final class ImmutableVector2Int {
+public class ImmutableVector2Int {
     public final int x;
     public final int y;
 
@@ -24,5 +24,10 @@ public final class ImmutableVector2Int {
     public int hashCode() {
 
         return Objects.hash(x, y);
+    }
+
+    @Override
+    public String toString() {
+        return "("+x+","+y+")";
     }
 }

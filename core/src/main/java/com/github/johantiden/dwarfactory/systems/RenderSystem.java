@@ -13,7 +13,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.Dwarfactory;
 import com.github.johantiden.dwarfactory.components.AngleComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
@@ -22,6 +21,7 @@ import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.World;
 import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import java.util.Map;
@@ -31,7 +31,7 @@ import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 public class RenderSystem extends EntitySystem {
     private static final float TILE_BUILDING_INSET = 5;
     public static final float FACTORY_SIZE = TILE_SIZE * 3 - TILE_BUILDING_INSET * 2;
-    private Vector2 mouseCoordinatesInWorld;
+    private ImmutableVector2Int mouseScreenCoordinates;
     private final Texture mouseTileTexture;
     private Map<Integer, Texture> map;
     private final TextureRegion factoryTexture;
@@ -72,8 +72,8 @@ public class RenderSystem extends EntitySystem {
 
     }
 
-    public void onMouseMoved(Vector2 worldCoordinates) {
-        this.mouseCoordinatesInWorld = worldCoordinates;
+    public void onMouseMoved(ImmutableVector2Int screenCoordinates) {
+        this.mouseScreenCoordinates = screenCoordinates;
     }
 
     @Override
@@ -156,8 +156,8 @@ public class RenderSystem extends EntitySystem {
                 FACTORY_SIZE);
 
 
-        if (mouseCoordinatesInWorld != null) {
-            TileCoordinate mouseTilePosition = CoordinateUtil.worldCoordinatesToTileCoordinates(mouseCoordinatesInWorld);
+        if (mouseScreenCoordinates != null) {
+            TileCoordinate mouseTilePosition = CoordinateUtil.screenToTile(mouseScreenCoordinates, camera);
             backgroundBatch.draw(mouseTileTexture,
                     TILE_SIZE * mouseTilePosition.x,
                     TILE_SIZE * mouseTilePosition.y,
@@ -181,10 +181,12 @@ public class RenderSystem extends EntitySystem {
         shapeRenderer.setAutoShapeType(true);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
+        int strokeWidth = 10;
+
         shapeRenderer.setColor(1, 0, 0, 1);
-        shapeRenderer.line(0, 0, 1000, 0);
+        drawThickLine(0, 0, 1000, 0, 1, strokeWidth);
         shapeRenderer.setColor(0, 1, 0, 1);
-        shapeRenderer.line(0, 0, 0, 1000);
+        drawThickLine(0, 0, 0, 1000, strokeWidth, 1);
 
         shapeRenderer.setColor(0, 1, 0, 1);
 
@@ -197,6 +199,11 @@ public class RenderSystem extends EntitySystem {
 //        }
 
         shapeRenderer.end();
+    }
+
+    private void drawThickLine(float x, float y, float x2, float y2, float strokeWidthX, float strokeWidthY) {
+        shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.rect(x-strokeWidthX/2f, y-strokeWidthY/2f, x2-x+strokeWidthX, y2-y+strokeWidthY);
     }
 
     private TextureRegion getTexture(Entity entity, VisualComponent visual) {

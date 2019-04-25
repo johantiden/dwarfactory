@@ -17,7 +17,7 @@ public class MovementSystem extends EntitySystem {
     private ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
 
     @Override
-    public void addedToEngine (Engine engine) {
+    public void addedToEngine(Engine engine) {
         entities = engine.getEntitiesFor(Family.all(PositionComponent.class, SpeedComponent.class).get());
         Dwarfactory.log("MovementSystem added to engine.");
     }
