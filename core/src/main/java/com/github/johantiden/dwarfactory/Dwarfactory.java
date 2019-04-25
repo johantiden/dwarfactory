@@ -11,7 +11,6 @@ import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.World;
-import com.github.johantiden.dwarfactory.game.assets.Assets;
 import com.github.johantiden.dwarfactory.game.entities.Boi;
 import com.github.johantiden.dwarfactory.game.entities.Factory;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
@@ -35,7 +34,7 @@ public class Dwarfactory extends ApplicationAdapter {
 
     @Override
 	public void create () {
-        World world = new World(Assets.Tiles.TILES);
+        World world = new World();
 
         engine = new PooledEngine();
 

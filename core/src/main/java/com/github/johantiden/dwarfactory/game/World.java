@@ -2,14 +2,11 @@ package com.github.johantiden.dwarfactory.game;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
-import com.github.johantiden.dwarfactory.Dwarfactory;
 import com.github.johantiden.dwarfactory.game.assets.Assets;
 import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -20,17 +17,10 @@ public class World {
     private final Map<TileCoordinate, BackgroundTile> map;
     private ImmutableRectangleInt currentMapBounds = new ImmutableRectangleInt(0, 0, 0, 0);
 
-    public static final Rectangle INITIAL_CLIP_WORLD = new Rectangle(
-            -Dwarfactory.VIEWPORT_WIDTH,
-            -Dwarfactory.VIEWPORT_HEIGHT,
-            Dwarfactory.VIEWPORT_WIDTH*2,
-            Dwarfactory.VIEWPORT_HEIGHT*2);
+    private final Object sync = new Object();
 
-    private Object sync = new Object();
-
-    public World(Iterable<TextureRegion> tileTextures) {
+    public World() {
         map = new HashMap<>();
-        ensureWorldIsLargeEnoughToRender(INITIAL_CLIP_WORLD);
     }
 
     private static TextureRegion randomTexture() {
@@ -72,7 +62,7 @@ public class World {
         }
     }
 
-    private Function<TileCoordinate, BackgroundTile> tileFactory() {
+    private static Function<TileCoordinate, BackgroundTile> tileFactory() {
         return tileCoordinate -> {
             TextureRegion textureRegion = randomTexture();
             return new BackgroundTile(tileCoordinate, textureRegion);
