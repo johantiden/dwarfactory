@@ -16,9 +16,8 @@ public class VisualComponent implements Component {
         this.impl = impl;
     }
 
-    public static VisualComponent createStatic(Texture texture) {
-        TextureRegion textureRegion = new TextureRegion(texture);
-        return new VisualComponent(speedComponent -> textureRegion);
+    public static VisualComponent createStatic(TextureRegion texture) {
+        return new VisualComponent(speedComponent -> texture);
     }
 
     public static VisualComponent create4Angles(Texture spriteSheet,

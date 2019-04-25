@@ -15,28 +15,32 @@ import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.AngleComponent;
 import com.github.johantiden.dwarfactory.components.AngularSpeedComponent;
+import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
+import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.World;
 import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.AccelerationSystem;
 import com.github.johantiden.dwarfactory.systems.AngularMovementSystem;
+import com.github.johantiden.dwarfactory.systems.BackgroundRenderSystem;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
+import com.github.johantiden.dwarfactory.systems.CameraUpdateSystem;
 import com.github.johantiden.dwarfactory.systems.MovementSystem;
-import com.github.johantiden.dwarfactory.systems.RenderSystem;
+import com.github.johantiden.dwarfactory.systems.ForegroundRenderSystem;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 import com.github.johantiden.dwarfactory.util.TextureUtil;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 import static com.badlogic.gdx.math.MathUtils.random;
+import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 
 public class Dwarfactory extends ApplicationAdapter {
 
@@ -70,6 +74,7 @@ public class Dwarfactory extends ApplicationAdapter {
         tileTextures.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_003.jpg")));
         tileTextures.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_004.jpg")));
 
+
 		debugBatch = new SpriteBatch();
 		font = getFont();
 
@@ -90,16 +95,26 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(new AccelerationSystem());
         engine.addSystem(new MovementSystem());
         engine.addSystem(new AngularMovementSystem());
-        RenderSystem renderSystem = new RenderSystem(camera, cameraEntity, new World(tileTextures));
-        engine.addSystem(renderSystem);
+        engine.addSystem(new CameraUpdateSystem(camera, cameraEntity));
+        World world = new World(tileTextures);
+        engine.addSystem(new BackgroundRenderSystem(camera, world));
+        ForegroundRenderSystem foregroundRenderSystem = new ForegroundRenderSystem(camera);
+        engine.addSystem(foregroundRenderSystem);
 
         Texture boiTexture = TextureUtil.loadTextureWithMipMap("simple_10x10_character.png");
         for (int i = 0; i < NUM_BOIS; i++) {
             createBoi(random, boiTexture);
         }
 
+        TextureRegion factoryTexture = new TextureRegion(
+                new Texture(Gdx.files.internal("buildings.png"), true),
+                0, 1304, 128, 128);
+
+        createFactory(new TileCoordinate(3,7), factoryTexture);
+        createFactory(new TileCoordinate(7,4), factoryTexture);
+
         MyInputProcessor inputProcessor = new MyInputProcessor(camera, screenCoordinates -> {
-            renderSystem.onMouseMoved(screenCoordinates);
+            foregroundRenderSystem.onMouseMoved(screenCoordinates);
             this.onMouseMoved(screenCoordinates);
         });
         Gdx.input.setInputProcessor(inputProcessor);
@@ -126,6 +141,21 @@ public class Dwarfactory extends ApplicationAdapter {
                 new ImmutableRectangleInt(20, 10, -10, 10),
                 new ImmutableRectangleInt(10, 10, 10, 10)
         ));
+        boi.add(new SizeComponent(32, 32));
+        engine.addEntity(boi);
+    }
+
+    private void createFactory(TileCoordinate position, TextureRegion factoryTexture) {
+
+        float tileBuildingInset = 5f;
+        float factorySize = TILE_SIZE * 3 - tileBuildingInset * 2;
+
+        Vector2 centerInWorld = CoordinateUtil.tileCenterToWorld(position);
+
+        Entity boi = engine.createEntity();
+        boi.add(new PositionComponent(centerInWorld.x, centerInWorld.y));
+        boi.add(new SizeComponent(factorySize, factorySize));
+        boi.add(VisualComponent.createStatic(factoryTexture));
         engine.addEntity(boi);
     }
 

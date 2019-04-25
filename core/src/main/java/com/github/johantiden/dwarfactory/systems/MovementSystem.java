@@ -13,8 +13,8 @@ import com.github.johantiden.dwarfactory.components.PositionComponent;
 public class MovementSystem extends EntitySystem {
     public ImmutableArray<Entity> entities;
 
-    private ComponentMapper<PositionComponent> pm = ComponentMapper.getFor(PositionComponent.class);
-    private ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
+    private final ComponentMapper<PositionComponent> pm = ComponentMapper.getFor(PositionComponent.class);
+    private final ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
 
     @Override
     public void addedToEngine(Engine engine) {

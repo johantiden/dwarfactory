@@ -54,4 +54,10 @@ public class CoordinateUtil {
     public static TileCoordinate screenToTile(ImmutableVector2Int screenPoint, Camera camera) {
         return worldToTile(screenToWorld(screenPoint, camera));
     }
+
+    public static Vector2 tileCenterToWorld(TileCoordinate position) {
+        return new Vector2(
+                (position.x+0.5f)*TILE_SIZE,
+                (position.y+0.5f)*TILE_SIZE);
+    }
 }
