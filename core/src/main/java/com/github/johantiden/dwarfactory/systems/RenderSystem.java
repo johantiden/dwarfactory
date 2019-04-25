@@ -9,14 +9,15 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AngleComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
+import com.github.johantiden.dwarfactory.components.VisualComponentFromSpeed;
 
 public class RenderSystem extends EntitySystem {
-    private ImmutableArray<Entity> entities;
+    private ImmutableArray<Entity> staticTextureEntities;
+    private ImmutableArray<Entity> dynamicTextureEntities;
 
     private final SpriteBatch batch;
 
@@ -27,9 +28,10 @@ public class RenderSystem extends EntitySystem {
 
 
     private final ComponentMapper<AngleComponent> am = ComponentMapper.getFor(AngleComponent.class);
-    private final ComponentMapper<PositionComponent> pm = ComponentMapper.getFor(PositionComponent.class);
+    private final ComponentMapper<PositionComponent> positionComponentMapper = ComponentMapper.getFor(PositionComponent.class);
     private final ComponentMapper<SpeedComponent> sm = ComponentMapper.getFor(SpeedComponent.class);
     private final ComponentMapper<VisualComponent> vm = ComponentMapper.getFor(VisualComponent.class);
+    private final ComponentMapper<VisualComponentFromSpeed> visualComponentFromSpeedComponentMapper = ComponentMapper.getFor(VisualComponentFromSpeed.class);
 
     public RenderSystem(Camera camera, Entity cameraEntity) {
 
@@ -41,7 +43,8 @@ public class RenderSystem extends EntitySystem {
 
     @Override
     public void addedToEngine(Engine engine) {
-        entities = engine.getEntitiesFor(Family.all(PositionComponent.class, VisualComponent.class).get());
+        staticTextureEntities = engine.getEntitiesFor(Family.all(PositionComponent.class, VisualComponent.class).get());
+        dynamicTextureEntities = engine.getEntitiesFor(Family.all(PositionComponent.class, SpeedComponent.class, VisualComponentFromSpeed.class).get());
     }
 
     @Override
@@ -51,11 +54,11 @@ public class RenderSystem extends EntitySystem {
     @Override
     public void update(float deltaTime) {
 
-        PositionComponent cameraPosition = pm.get(cameraEntity);
-        float cameraDx = cameraPosition.position.x - lastCameraPosition.position.x;
-        float cameraDy = cameraPosition.position.y - lastCameraPosition.position.y;
-        lastCameraPosition.position.x = cameraPosition.position.x;
-        lastCameraPosition.position.y = cameraPosition.position.y;
+        PositionComponent cameraPosition = positionComponentMapper.get(cameraEntity);
+        float cameraDx = cameraPosition.x - lastCameraPosition.x;
+        float cameraDy = cameraPosition.y - lastCameraPosition.y;
+        lastCameraPosition.x = cameraPosition.x;
+        lastCameraPosition.y = cameraPosition.y;
 
         AngleComponent cameraAngle = am.get(cameraEntity);
         float cameraDr = cameraAngle.angle - lastCameraAngle.angle;
@@ -68,44 +71,23 @@ public class RenderSystem extends EntitySystem {
         batch.begin();
         batch.setProjectionMatrix(camera.combined);
 
-        for (int i = 0; i < entities.size(); ++i) {
-            Entity e = entities.get(i);
+        for (Entity entity : staticTextureEntities) {
+            PositionComponent position = positionComponentMapper.get(entity);
+            VisualComponent visual = vm.get(entity);
 
-            PositionComponent position = pm.get(e);
-            VisualComponent visual = vm.get(e);
+            batch.draw(visual.getTexture(), position.x, position.y, 32, 32);
+        }
 
-            if (sm.has(e)) {
-                SpeedComponent speedComponent = sm.get(e);
-                batch.draw(getTextureFromState(visual.region, speedComponent), position.position.x, position.position.y, 32, 32);
-            } else {
-                batch.draw(visual.region, position.position.x, position.position.y, 32, 32);
+        for (Entity entity : dynamicTextureEntities) {
+            PositionComponent position = positionComponentMapper.get(entity);
+            VisualComponentFromSpeed visual = visualComponentFromSpeedComponentMapper.get(entity);
+            SpeedComponent speedComponent = sm.get(entity);
 
-            }
+            TextureRegion texture = visual.getSpriteSheet(speedComponent);
+            batch.draw(texture, position.x-texture.getRegionWidth()/2, position.y-texture.getRegionHeight()/2, 32, 32);
         }
 
         batch.end();
-    }
-
-    private TextureRegion getTextureFromState(TextureRegion region, SpeedComponent speedComponent) {
-
-        double angle = (double) new Vector2(speedComponent.speed.x, speedComponent.speed.y).angle();
-
-        if (angle >= 225 && angle <= 315) {
-            // down
-            return new TextureRegion(region, 10, 20, 10, 10);
-        }
-
-        if (angle >= 45 && angle <= 135) {
-            // up
-            return new TextureRegion(region, 10, 0, 10, 10);
-        }
-
-        if (angle >= 135 && angle <= 225) {
-            // left, flip the image
-            return new TextureRegion(region, 20, 10, -10, 10);
-        }
-
-        return new TextureRegion(region, 10, 10, 10, 10);
     }
 
 }

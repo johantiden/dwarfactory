@@ -31,18 +31,16 @@ public class MovementSystem extends EntitySystem {
     @Override
     public void update (float deltaTime) {
 
-        for (int i = 0; i < entities.size(); ++i) {
-            Entity e = entities.get(i);
+        for (Entity entity : entities) {
+            PositionComponent position = pm.get(entity);
+            SpeedComponent speed = mm.get(entity);
 
-            PositionComponent p = pm.get(e);
-            SpeedComponent s = mm.get(e);
-
-            if (s.speed.len() > s.maxSpeed) {
-                s.speed.setLength(s.maxSpeed);
+            if (speed.len() > speed.maxSpeed) {
+                speed.setLength(speed.maxSpeed);
             }
 
-            p.position.x += s.speed.x * deltaTime;
-            p.position.y += s.speed.y * deltaTime;
+            position.x += speed.x * deltaTime;
+            position.y += speed.y * deltaTime;
         }
 
 //            log(entities.size() + " Entities updated in MovementSystem.");

@@ -53,15 +53,15 @@ public class CameraControlSystem extends EntitySystem {
         float deltaX = getDeltaX();
         float deltaY = getDeltaY();
 
+        AccelerationComponent acceleration = am.get(cameraEntity);
+
         if (isBreak()) {
-            SpeedComponent speedComponent = mm.get(cameraEntity);
-            AccelerationComponent accelerationComponent = am.get(cameraEntity);
-            accelerationComponent.acceleration.x = -speedComponent.speed.x*2;
-            accelerationComponent.acceleration.y = -speedComponent.speed.y*2;
+            SpeedComponent speed = mm.get(cameraEntity);
+            acceleration.x = -speed.x*2;
+            acceleration.y = -speed.y*2;
         } else {
-            AccelerationComponent accelerationComponent = am.get(cameraEntity);
-            accelerationComponent.acceleration.x = deltaX * camera.zoom;
-            accelerationComponent.acceleration.y = deltaY * camera.zoom;
+            acceleration.x = deltaX * camera.zoom;
+            acceleration.y = deltaY * camera.zoom;
         }
     }
 

@@ -3,14 +3,15 @@ package com.github.johantiden.dwarfactory.components;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.Vector2;
 
-public class PositionComponent implements Component {
-    public final Vector2 position;
-
-    public PositionComponent(Vector2 position) {
-        this.position = position;
+public class PositionComponent extends Vector2 implements Component {
+    public PositionComponent() {
     }
 
     public PositionComponent(float x, float y) {
-        this(new Vector2(x, y));
+        super(x, y);
+    }
+
+    public PositionComponent(Vector2 v) {
+        super(v);
     }
 }

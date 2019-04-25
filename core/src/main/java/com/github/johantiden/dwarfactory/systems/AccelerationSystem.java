@@ -31,14 +31,13 @@ public class AccelerationSystem extends EntitySystem {
     @Override
     public void update (float deltaTime) {
 
-        for (int i = 0; i < entities.size(); ++i) {
-            Entity e = entities.get(i);
+        for (Entity entity : entities) {
 
-            AccelerationComponent a = am.get(e);
-            SpeedComponent s = mm.get(e);
+            AccelerationComponent acceleration = am.get(entity);
+            SpeedComponent speed = mm.get(entity);
 
-            s.speed.x += a.acceleration.x * deltaTime;
-            s.speed.y += a.acceleration.y * deltaTime;
+            speed.x += acceleration.x * deltaTime;
+            speed.y += acceleration.y * deltaTime;
         }
     }
 }

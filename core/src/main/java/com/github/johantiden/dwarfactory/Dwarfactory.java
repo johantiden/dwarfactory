@@ -19,12 +19,13 @@ import com.github.johantiden.dwarfactory.components.AngleComponent;
 import com.github.johantiden.dwarfactory.components.AngularSpeedComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
-import com.github.johantiden.dwarfactory.components.VisualComponent;
+import com.github.johantiden.dwarfactory.components.VisualComponentFromSpeed;
 import com.github.johantiden.dwarfactory.systems.AccelerationSystem;
 import com.github.johantiden.dwarfactory.systems.AngularMovementSystem;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.MovementSystem;
 import com.github.johantiden.dwarfactory.systems.RenderSystem;
+import com.github.johantiden.dwarfactory.util.TextureUtil;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -70,7 +71,8 @@ public class Dwarfactory extends ApplicationAdapter {
 	public void create () {
         Random random = new SecureRandom();
 
-        Texture boiTexture = new Texture(Gdx.files.internal("simple_10x10_character.png"), true);
+
+
         tileTextures.add(new Texture(Gdx.files.internal("tile_001.jpg"), true));
         tileTextures.add(new Texture(Gdx.files.internal("tile_002.jpg"), true));
         tileTextures.add(new Texture(Gdx.files.internal("tile_003.jpg"), true));
@@ -84,8 +86,6 @@ public class Dwarfactory extends ApplicationAdapter {
                 new Texture(Gdx.files.internal("buildings.png"), true),
                 0, 1304, 128, 128);
 
-
-        boiTexture.setFilter(Texture.TextureFilter.MipMapNearestNearest, Texture.TextureFilter.MipMapNearestNearest);
 
 		debugBatch = new SpriteBatch();
 		backgroundBatch = new SpriteBatch();
@@ -110,13 +110,14 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(new AngularMovementSystem());
         engine.addSystem(new RenderSystem(camera, cameraEntity));
 
-        TextureRegion boiRegion = new TextureRegion(boiTexture);
+        Texture boiTexture = TextureUtil.loadTextureWithMipMap("simple_10x10_character.png");
+
         for (int i = 0; i < NUM_BOIS; i++) {
-            Entity box = engine.createEntity();
-            box.add(new PositionComponent(random(VIEWPORT_WIDTH), random(VIEWPORT_HEIGHT)));
-            box.add(new SpeedComponent(random.nextFloat()*30-15, random.nextFloat()*30-15));
-            box.add(new VisualComponent(boiRegion));
-            engine.addEntity(box);
+            Entity boi = engine.createEntity();
+            boi.add(new PositionComponent(random(VIEWPORT_WIDTH), random(VIEWPORT_HEIGHT)));
+            boi.add(new SpeedComponent(random.nextFloat()*30-15, random.nextFloat()*30-15));
+            boi.add(new VisualComponentFromSpeed(boiTexture));
+            engine.addEntity(boi);
         }
 
         MyInputProcessor inputProcessor = new MyInputProcessor(camera, this::onMouseMoved);

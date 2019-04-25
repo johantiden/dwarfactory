@@ -3,14 +3,16 @@ package com.github.johantiden.dwarfactory.components;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.Vector2;
 
-public class AccelerationComponent implements Component {
-    public final Vector2 acceleration;
+public class AccelerationComponent extends Vector2 implements Component {
 
-    public AccelerationComponent(Vector2 acceleration) {
-        this.acceleration = acceleration;
+    public AccelerationComponent() {
     }
 
     public AccelerationComponent(float x, float y) {
-        this(new Vector2(x, y));
+        super(x, y);
+    }
+
+    public AccelerationComponent(Vector2 v) {
+        super(v);
     }
 }

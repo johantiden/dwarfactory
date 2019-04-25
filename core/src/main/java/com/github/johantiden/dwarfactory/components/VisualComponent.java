@@ -1,12 +1,21 @@
 package com.github.johantiden.dwarfactory.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class VisualComponent implements Component {
-    public TextureRegion region;
+    private final TextureRegion textureRegion;
 
-    public VisualComponent (TextureRegion region) {
-        this.region = region;
+    public VisualComponent(TextureRegion textureRegion) {
+        this.textureRegion = textureRegion;
+    }
+
+    public VisualComponent(Texture texture) {
+        textureRegion = new TextureRegion(texture);
+    }
+
+    public TextureRegion getTexture() {
+        return textureRegion;
     }
 }
