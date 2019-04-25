@@ -111,9 +111,9 @@ public class CameraControlSystem extends EntitySystem {
         if (isUp == isDown) {
             return 0;
         } else if (isUp) {
-            return ACCELERATION_FROM_KEY_PANNING;
-        } else /*isDown*/ {
             return -ACCELERATION_FROM_KEY_PANNING;
+        } else /*isDown*/ {
+            return ACCELERATION_FROM_KEY_PANNING;
         }
     }
 

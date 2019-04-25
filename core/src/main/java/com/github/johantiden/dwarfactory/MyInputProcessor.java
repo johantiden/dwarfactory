@@ -3,7 +3,7 @@ package com.github.johantiden.dwarfactory;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import java.util.function.Consumer;
 
@@ -25,8 +25,9 @@ class MyInputProcessor extends InputAdapter {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        Vector3 unproject = camera.unproject(new Vector3(screenX, screenY, 0));
-        onMouseMoved.accept(new Vector2(unproject.x, unproject.y));
+        Vector2 world = CoordinateUtil.screenToWorld(screenX, screenY, camera);
+        onMouseMoved.accept(world);
         return false;
     }
+
 }
