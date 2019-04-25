@@ -14,13 +14,11 @@ public class CameraControlSystem extends EntitySystem {
 
     private static final float ACCELERATION_FROM_KEY_PANNING = 1000;
     private static final int CAMERA_ROTATION_SPEED = 60;
-//    private static final boolean ALLOW_ROTATION = false;
 
     private final OrthographicCamera camera;
     private final Entity cameraEntity;
     private final ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
-    private final ComponentMapper<AccelerationComponent> am = ComponentMapper.getFor(AccelerationComponent.class);
-//    private final ComponentMapper<AngularSpeedComponent> angularMapper = ComponentMapper.getFor(AngularSpeedComponent.class);
+    private final ComponentMapper<AccelerationComponent> accelerationMapper = ComponentMapper.getFor(AccelerationComponent.class);
 
     public CameraControlSystem(OrthographicCamera camera, Entity cameraEntity) {
         this.camera = camera;
@@ -38,22 +36,13 @@ public class CameraControlSystem extends EntitySystem {
     @Override
     public void update(float deltaTime) {
         controlMovement();
-//        if (ALLOW_ROTATION) {
-//            controlRotation();
-//        }
     }
-
-//    private void controlRotation() {
-//        float deltaAngle = getDeltaAngle();
-//        AngularSpeedComponent angularSpeedComponent = am.get(cameraEntity);
-//        angularSpeedComponent.angularSpeed = deltaAngle;
-//    }
 
     private void controlMovement() {
         float deltaX = getDeltaX();
         float deltaY = getDeltaY();
 
-        AccelerationComponent acceleration = am.get(cameraEntity);
+        AccelerationComponent acceleration = accelerationMapper.get(cameraEntity);
 
         if (isBreak()) {
             SpeedComponent speed = mm.get(cameraEntity);
@@ -68,19 +57,6 @@ public class CameraControlSystem extends EntitySystem {
     private boolean isBreak() {
         return isLeft() == isRight() &&
                 isUp() == isDown();
-    }
-
-    private float getDeltaAngle() {
-        boolean isLeft = Gdx.input.isKeyPressed(Input.Keys.Q);
-        boolean isRight = Gdx.input.isKeyPressed(Input.Keys.E);
-
-        if (isLeft == isRight) {
-            return 0;
-        } else if (isLeft) {
-            return CAMERA_ROTATION_SPEED;
-        } else /*isRight*/ {
-            return -CAMERA_ROTATION_SPEED;
-        }
     }
 
     private float getDeltaX() {
