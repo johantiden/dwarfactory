@@ -1,7 +1,5 @@
 package com.github.johantiden.dwarfactory.systems;
 
-import com.badlogic.ashley.core.ComponentMapper;
-import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
@@ -19,13 +17,11 @@ public class RenderHudSystem extends EntitySystem {
     private final SpriteBatch batch;
     private final BitmapFont font;
     private final Camera camera;
-    private final Entity cameraEntity;
 
     private ImmutableVector2Int mouseScreenCoordinates;
 
-    public RenderHudSystem(Camera camera, Entity cameraEntity) {
+    public RenderHudSystem(Camera camera) {
         this.camera = camera;
-        this.cameraEntity = cameraEntity;
         batch = new SpriteBatch();
         font = getFont();
     }

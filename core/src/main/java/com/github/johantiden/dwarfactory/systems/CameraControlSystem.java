@@ -8,17 +8,20 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
+import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 
 public class CameraControlSystem extends EntitySystem {
 
     private static final float ACCELERATION_FROM_KEY_PANNING = 1000;
-    private static final int CAMERA_ROTATION_SPEED = 60;
 
     private final OrthographicCamera camera;
     private final Entity cameraEntity;
-    private final ComponentMapper<SpeedComponent> mm = ComponentMapper.getFor(SpeedComponent.class);
+    private final ComponentMapper<SpeedComponent> speedMapper = ComponentMapper.getFor(SpeedComponent.class);
     private final ComponentMapper<AccelerationComponent> accelerationMapper = ComponentMapper.getFor(AccelerationComponent.class);
+    private final ComponentMapper<PositionComponent> positionComponentMapper = ComponentMapper.getFor(PositionComponent.class);
+
+    private final PositionComponent lastCameraPosition = new PositionComponent(0, 0);
 
     public CameraControlSystem(OrthographicCamera camera, Entity cameraEntity) {
         this.camera = camera;
@@ -45,13 +48,23 @@ public class CameraControlSystem extends EntitySystem {
         AccelerationComponent acceleration = accelerationMapper.get(cameraEntity);
 
         if (isBreak()) {
-            SpeedComponent speed = mm.get(cameraEntity);
+            SpeedComponent speed = speedMapper.get(cameraEntity);
             acceleration.x = -speed.x*2;
             acceleration.y = -speed.y*2;
         } else {
             acceleration.x = deltaX * camera.zoom;
             acceleration.y = deltaY * camera.zoom;
         }
+
+
+        PositionComponent cameraPosition = positionComponentMapper.get(cameraEntity);
+        float cameraDx = cameraPosition.x - lastCameraPosition.x;
+        float cameraDy = cameraPosition.y - lastCameraPosition.y;
+        lastCameraPosition.x = cameraPosition.x;
+        lastCameraPosition.y = cameraPosition.y;
+
+        camera.translate(cameraDx, cameraDy, 0);
+        camera.update();
     }
 
     private boolean isBreak() {

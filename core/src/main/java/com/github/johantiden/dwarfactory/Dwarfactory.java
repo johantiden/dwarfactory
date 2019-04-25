@@ -6,7 +6,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
@@ -18,7 +17,6 @@ import com.github.johantiden.dwarfactory.game.entities.Factory;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.AccelerationSystem;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
-import com.github.johantiden.dwarfactory.systems.CameraUpdateSystem;
 import com.github.johantiden.dwarfactory.systems.MovementSystem;
 import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
 import com.github.johantiden.dwarfactory.systems.RenderForegroundSystem;
@@ -31,19 +29,34 @@ public class Dwarfactory extends ApplicationAdapter {
     public static final int VIEWPORT_WIDTH = 2880;
     public static final int VIEWPORT_HEIGHT = 1620;
 
-    private SpriteBatch debugBatch;
-
     private PooledEngine engine;
     private RenderForegroundSystem renderForegroundSystem;
     private RenderHudSystem renderHudSystem;
 
     @Override
 	public void create () {
-
-		debugBatch = new SpriteBatch();
+        World world = new World(Assets.Tiles.TILES);
 
         engine = new PooledEngine();
 
+        OrthographicCamera camera = createCamera();
+
+        engine.addSystem(new AccelerationSystem());
+        engine.addSystem(new MovementSystem());
+
+        engine.addSystem(new RenderBackgroundSystem(camera, world));
+        renderForegroundSystem = new RenderForegroundSystem(camera);
+        engine.addSystem(renderForegroundSystem);
+        renderHudSystem = new RenderHudSystem(camera);
+        engine.addSystem(renderHudSystem);
+
+        MyInputProcessor inputProcessor = new MyInputProcessor(camera, onMouseMoved());
+        Gdx.input.setInputProcessor(inputProcessor);
+
+        createGameEntities();
+    }
+
+    private OrthographicCamera createCamera() {
         OrthographicCamera camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.position.set(0, 0, 0);
         camera.setToOrtho(true);
@@ -54,21 +67,7 @@ public class Dwarfactory extends ApplicationAdapter {
         cameraEntity.add(new AccelerationComponent(0, 0));
         engine.addEntity(cameraEntity);
         engine.addSystem(new CameraControlSystem(camera, cameraEntity));
-        engine.addSystem(new AccelerationSystem());
-        engine.addSystem(new MovementSystem());
-        engine.addSystem(new CameraUpdateSystem(camera, cameraEntity));
-
-        World world = new World(Assets.Tiles.TILES);
-        engine.addSystem(new RenderBackgroundSystem(camera, world));
-        renderForegroundSystem = new RenderForegroundSystem(camera);
-        engine.addSystem(renderForegroundSystem);
-        renderHudSystem = new RenderHudSystem(camera, cameraEntity);
-        engine.addSystem(renderHudSystem);
-
-        MyInputProcessor inputProcessor = new MyInputProcessor(camera, onMouseMoved());
-        Gdx.input.setInputProcessor(inputProcessor);
-
-        createGameEntities();
+        return camera;
     }
 
     private Consumer<ImmutableVector2Int> onMouseMoved() {
@@ -99,9 +98,4 @@ public class Dwarfactory extends ApplicationAdapter {
 
         engine.update(Gdx.graphics.getDeltaTime());
     }
-
-    @Override
-	public void dispose () {
-		debugBatch.dispose();
-	}
 }
