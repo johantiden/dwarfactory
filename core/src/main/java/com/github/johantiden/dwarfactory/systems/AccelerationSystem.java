@@ -29,7 +29,7 @@ public class AccelerationSystem extends EntitySystem {
     }
 
     @Override
-    public void update (float deltaTime) {
+    public void update(float deltaTime) {
 
         for (Entity entity : entities) {
 

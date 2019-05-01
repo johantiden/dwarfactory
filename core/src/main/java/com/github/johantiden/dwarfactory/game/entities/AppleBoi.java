@@ -3,6 +3,7 @@ package com.github.johantiden.dwarfactory.game.entities;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.Dwarfactory;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.ControlComponent;
@@ -11,6 +12,8 @@ import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.assets.Assets;
+import com.github.johantiden.dwarfactory.game.entities.factory.ItemProducer;
+import com.github.johantiden.dwarfactory.game.entities.factory.ItemReceiver;
 
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -48,8 +51,8 @@ public class AppleBoi {
                 Assets.Boi.UP,
                 Assets.Boi.LEFT,
                 Assets.Boi.RIGHT);
-        VisualComponent carryVisual = StringOverlayVisual.create(new Color(1,0,0,1), () -> appleBoi.tryGetCarrying().map(carrying -> String.valueOf(carrying.getAmount())));
-        boiEntity.add(VisualComponent.blend2(mainVisual, carryVisual));
+        VisualComponent carryVisual = StringOverlayVisual.create(new Color(1,0,0,1), 32, new Vector2(30, 30), () -> appleBoi.tryGetCarrying().map(carrying -> String.valueOf(carrying.getAmount())));
+        boiEntity.add(VisualComponent.blend(mainVisual, carryVisual));
         boiEntity.add(new SizeComponent(32, 32));
         boiEntity.add(new ControlComponent(appleBoi.newMyJobSelector()));
         return appleBoi;
@@ -75,14 +78,7 @@ public class AppleBoi {
         engine.addEntity(appleBoi.entity);
     }
 
-    public static void createRandomBois(int numBois, PooledEngine engine, ItemReceiver<Apple> targetHack, ItemProducer<Apple> sourceHack) {
-        for (int i = 0; i < numBois; i++) {
-            createRandomBoi(engine, targetHack, sourceHack);
-        }
-    }
-
     private class MyJobSelector implements Supplier<ControlComponent.Job> {
-
 
         @Override
         public ControlComponent.Job get() {
@@ -103,7 +99,11 @@ public class AppleBoi {
         private Runnable createPickUpJob() {
             return () -> {
                 ItemStack<Apple> newItemStack = sourceHack.drain(MAX_CARRY);
-                carrying = newItemStack;
+                if (newItemStack.getAmount() > 0) {
+                    carrying = newItemStack;
+                } else {
+                    carrying = null;
+                }
             };
         }
 

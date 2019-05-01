@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class VisualComponent implements Component {
@@ -19,11 +20,11 @@ public class VisualComponent implements Component {
         return new VisualComponent(renderContext -> drawSimple(renderContext, texture));
     }
 
-    public static VisualComponent blend2(VisualComponent under, VisualComponent over) {
+    public static VisualComponent blend(VisualComponent... visualComponents) {
         return new VisualComponent(
                 renderContext -> {
-                    under.draw(renderContext);
-                    over.draw(renderContext);
+                    Arrays.stream(visualComponents)
+                            .forEach(visualComponent -> visualComponent.draw(renderContext));
                 }
         );
     }
@@ -69,7 +70,7 @@ public class VisualComponent implements Component {
         float height = renderContext.size.y;
         float x = renderContext.position.x - width / 2;
         float y = renderContext.position.y - height / 2;
-        renderContext.batch.draw(textureRegion, x, y, width, height);
+        renderContext.spriteBatch.draw(textureRegion, x, y, width, height);
     }
 
     public void draw(RenderContext renderContext) {

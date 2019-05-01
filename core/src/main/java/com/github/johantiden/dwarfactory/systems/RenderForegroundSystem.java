@@ -11,9 +11,12 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
+import com.github.johantiden.dwarfactory.components.TaskComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
@@ -30,17 +33,21 @@ public class RenderForegroundSystem extends EntitySystem {
 
     private final SpriteBatch spriteBatch;
     private final ShapeRenderer shapeRenderer;
+    private final ShapeRenderer debugShapeRenderer;
 
     private final Camera camera;
 
-    private final ComponentMapper<PositionComponent> positionComponentMapper = ComponentMapper.getFor(PositionComponent.class);
-    private final ComponentMapper<SpeedComponent> sm = ComponentMapper.getFor(SpeedComponent.class);
-    private final ComponentMapper<VisualComponent> vm = ComponentMapper.getFor(VisualComponent.class);
+    private final ComponentMapper<PositionComponent> positionManager = ComponentMapper.getFor(PositionComponent.class);
+    private final ComponentMapper<SpeedComponent> speedManager = ComponentMapper.getFor(SpeedComponent.class);
+    private final ComponentMapper<TaskComponent> taskManager = ComponentMapper.getFor(TaskComponent.class);
+    private final ComponentMapper<VisualComponent> visualManager = ComponentMapper.getFor(VisualComponent.class);
     private final ComponentMapper<SizeComponent> sizeManager = ComponentMapper.getFor(SizeComponent.class);
+    private final ComponentMapper<AccelerationComponent> accelerationManager = ComponentMapper.getFor(AccelerationComponent.class);
 
     public RenderForegroundSystem(Camera camera) {
         this.spriteBatch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer(100);
+        this.debugShapeRenderer = new ShapeRenderer(100);
         this.camera = camera;
         mouseTileTexture = new Texture(Gdx.files.internal("selection_overlay.png"), true);
     }
@@ -65,16 +72,20 @@ public class RenderForegroundSystem extends EntitySystem {
     }
 
     private void drawForeground() {
-        spriteBatch.begin();
         spriteBatch.setProjectionMatrix(camera.combined);
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+        shapeRenderer.setAutoShapeType(true);
+        shapeRenderer.begin();
 
         for (Entity entity : entitites) {
-            PositionComponent position = positionComponentMapper.get(entity);
+            PositionComponent position = positionManager.get(entity);
             SizeComponent size = sizeManager.get(entity);
-            VisualComponent visual = vm.get(entity);
-            SpeedComponent speed = sm.has(entity) ? sm.get(entity) : null;
+            VisualComponent visual = visualManager.get(entity);
+            SpeedComponent speed = speedManager.has(entity) ? speedManager.get(entity) : null;
+            TaskComponent task = taskManager.has(entity) ? taskManager.get(entity) : null;
 
-            visual.draw(new RenderContext(spriteBatch, speed, position, size));
+            visual.draw(new RenderContext(spriteBatch, shapeRenderer, debugShapeRenderer, speed, position, size, task));
         }
 
         if (mouseScreenCoordinates != null) {
@@ -86,44 +97,86 @@ public class RenderForegroundSystem extends EntitySystem {
                     TILE_SIZE);
         }
 
-
+        shapeRenderer.end();
         spriteBatch.end();
     }
 
     private void drawDebug() {
 
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setAutoShapeType(true);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        debugShapeRenderer.setProjectionMatrix(camera.combined);
+        debugShapeRenderer.setAutoShapeType(true);
+        debugShapeRenderer.begin();
 
-        int strokeWidth = 10;
+        debugDrawCoordinateLines();
+//        debugDrawBoundingBoxes();
+        debugDrawSpeed();
+        debugDrawAcceleration();
 
-        shapeRenderer.setColor(1, 0, 0, 1);
-        drawThickLine(0, 0, 1000, 0, 1, strokeWidth);
-        shapeRenderer.setColor(0, 1, 0, 1);
-        drawThickLine(0, 0, 0, 1000, strokeWidth, 1);
+        debugShapeRenderer.end();
+    }
 
-        shapeRenderer.setColor(0, 1, 0, 1);
+    private void debugDrawSpeed() {
+        debugShapeRenderer.setColor(1, 1, 0, 1);
+        debugShapeRenderer.set(ShapeRenderer.ShapeType.Line);
 
         for (Entity entity : entitites) {
-            PositionComponent position = positionComponentMapper.get(entity);
-            SizeComponent size = sizeManager.get(entity);
-            shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+            if (speedManager.has(entity)) {
+                PositionComponent position = positionManager.get(entity);
+                SpeedComponent speed = speedManager.get(entity);
 
-            shapeRenderer.circle(position.x, position.y, size.x/2);
-            shapeRenderer.rect(
+                Vector2 point = position.cpy().add(speed.cpy().scl(1));
+                debugShapeRenderer.line(
+                        position.x, position.y,
+                        point.x, point.y
+                );
+            }
+        }
+    }
+    private void debugDrawAcceleration() {
+        debugShapeRenderer.setColor(0, 1, 0, 1);
+        debugShapeRenderer.set(ShapeRenderer.ShapeType.Line);
+
+        for (Entity entity : entitites) {
+            if (accelerationManager.has(entity)) {
+                PositionComponent position = positionManager.get(entity);
+                AccelerationComponent acceleration = accelerationManager.get(entity);
+
+                Vector2 point = position.cpy().add(acceleration.cpy().scl(1));
+                debugShapeRenderer.line(
+                        position.x, position.y,
+                        point.x, point.y
+                );
+            }
+        }
+    }
+
+    private void debugDrawBoundingBoxes() {
+        debugShapeRenderer.setColor(0, 1, 0, 1);
+        debugShapeRenderer.set(ShapeRenderer.ShapeType.Line);
+
+        for (Entity entity : entitites) {
+            PositionComponent position = positionManager.get(entity);
+            SizeComponent size = sizeManager.get(entity);
+
+            debugShapeRenderer.rect(
                     position.x-size.x /2,
                     position.y-size.y/2,
                     size.x,
                     size.y);
         }
+    }
 
-        shapeRenderer.end();
+    private void debugDrawCoordinateLines() {
+        int strokeWidth = 10;
+        debugShapeRenderer.setColor(1, 0, 0, 1);
+        drawThickLine(0, 0, 1000, 0, 1, strokeWidth);
+        debugShapeRenderer.setColor(0, 1, 0, 1);
+        drawThickLine(0, 0, 0, 1000, strokeWidth, 1);
     }
 
     private void drawThickLine(float x, float y, float x2, float y2, float strokeWidthX, float strokeWidthY) {
-        shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.rect(x-strokeWidthX/2f, y-strokeWidthY/2f, x2-x+strokeWidthX, y2-y+strokeWidthY);
+        debugShapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+        debugShapeRenderer.rect(x-strokeWidthX/2f, y-strokeWidthY/2f, x2-x+strokeWidthX, y2-y+strokeWidthY);
     }
 
 }

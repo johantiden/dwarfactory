@@ -68,8 +68,10 @@ public class BoiControlSystem extends EntitySystem {
                 .sub(position)
                 .setLength(1);
 
-        float accelerationFactor = 10;
-        acceleration.add(targetDirectionVector.scl(accelerationFactor));
+        float accelerationFactor = 100;
+        Vector2 newAcceleration = targetDirectionVector.scl(accelerationFactor);
+        acceleration.x = newAcceleration.x;
+        acceleration.y = newAcceleration.y;
     }
 
 }

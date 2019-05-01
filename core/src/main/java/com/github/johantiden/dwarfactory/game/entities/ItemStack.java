@@ -1,20 +1,21 @@
 package com.github.johantiden.dwarfactory.game.entities;
 
-public abstract class ItemStack<T> {
-    private int amount;
+import com.github.johantiden.dwarfactory.math.Vector1Int;
+
+public abstract class ItemStack<T> extends Vector1Int {
 
     public ItemStack(int amount) {
-        this.amount = amount;
+        super(amount);
     }
 
     public ItemStack<T> tryDrain(int maxAmount) {
 
-        if (amount >= maxAmount) {
-            amount -= maxAmount;
+        if (value >= maxAmount) {
+            value -= maxAmount;
             return createNew(maxAmount);
         } else {
-            ItemStack<T> partialStack = createNew(amount);
-            amount = 0;
+            ItemStack<T> partialStack = createNew(value);
+            value = 0;
             return partialStack;
         }
 
@@ -23,12 +24,12 @@ public abstract class ItemStack<T> {
     public abstract ItemStack<T> createNew(int amount);
 
     public void takeAllFrom(ItemStack<T> itemStack) {
-        int amountToTake = itemStack.amount;
-        this.amount += amountToTake;
-        itemStack.amount = 0;
+        int amountToTake = itemStack.value;
+        this.value += amountToTake;
+        itemStack.value = 0;
     }
 
     public int getAmount() {
-        return amount;
+        return value;
     }
 }

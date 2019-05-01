@@ -28,16 +28,17 @@ public class RenderHudSystem extends EntitySystem {
 
     @Override
     public void update(float deltaTime) {
-        drawDebug();
+        drawDebug(deltaTime);
     }
 
-    private void drawDebug() {
+    private void drawDebug(float deltaTime) {
         int fps = Gdx.graphics.getFramesPerSecond();
 
         List<String> debugLines = new ArrayList<>();
 
         debugLines.add("fps: " + fps);
         debugLines.addAll(getMouseCoordinatesInDifferentSpaces());
+        debugLines.add("deltaTime: " + deltaTime);
 
         Collections.reverse(debugLines);
         batch.begin();
