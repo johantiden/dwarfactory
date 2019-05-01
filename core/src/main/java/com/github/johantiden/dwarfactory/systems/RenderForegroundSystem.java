@@ -10,13 +10,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
+import com.github.johantiden.dwarfactory.game.entities.RenderContext;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
@@ -28,7 +28,7 @@ public class RenderForegroundSystem extends EntitySystem {
 
     private ImmutableArray<Entity> entitites;
 
-    private final SpriteBatch batch;
+    private final SpriteBatch spriteBatch;
     private final ShapeRenderer shapeRenderer;
 
     private final Camera camera;
@@ -39,7 +39,7 @@ public class RenderForegroundSystem extends EntitySystem {
     private final ComponentMapper<SizeComponent> sizeManager = ComponentMapper.getFor(SizeComponent.class);
 
     public RenderForegroundSystem(Camera camera) {
-        this.batch = new SpriteBatch();
+        this.spriteBatch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer(100);
         this.camera = camera;
         mouseTileTexture = new Texture(Gdx.files.internal("selection_overlay.png"), true);
@@ -65,21 +65,21 @@ public class RenderForegroundSystem extends EntitySystem {
     }
 
     private void drawForeground() {
-        batch.begin();
-        batch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+        spriteBatch.setProjectionMatrix(camera.combined);
 
         for (Entity entity : entitites) {
             PositionComponent position = positionComponentMapper.get(entity);
             SizeComponent size = sizeManager.get(entity);
             VisualComponent visual = vm.get(entity);
-            TextureRegion texture = getTexture(entity, visual);
+            SpeedComponent speed = sm.has(entity) ? sm.get(entity) : null;
 
-            batch.draw(texture, position.x-size.x/2, position.y-size.y/2, size.x, size.y);
+            visual.draw(new RenderContext(spriteBatch, speed, position, size));
         }
 
         if (mouseScreenCoordinates != null) {
             TileCoordinate mouseTilePosition = CoordinateUtil.screenToTile(mouseScreenCoordinates, camera);
-            batch.draw(mouseTileTexture,
+            spriteBatch.draw(mouseTileTexture,
                     TILE_SIZE * mouseTilePosition.x,
                     TILE_SIZE * mouseTilePosition.y,
                     TILE_SIZE,
@@ -87,7 +87,7 @@ public class RenderForegroundSystem extends EntitySystem {
         }
 
 
-        batch.end();
+        spriteBatch.end();
     }
 
     private void drawDebug() {
@@ -124,17 +124,6 @@ public class RenderForegroundSystem extends EntitySystem {
     private void drawThickLine(float x, float y, float x2, float y2, float strokeWidthX, float strokeWidthY) {
         shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.rect(x-strokeWidthX/2f, y-strokeWidthY/2f, x2-x+strokeWidthX, y2-y+strokeWidthY);
-    }
-
-    private TextureRegion getTexture(Entity entity, VisualComponent visual) {
-        TextureRegion texture;
-        if (sm.has(entity)) {
-            SpeedComponent speed = sm.get(entity);
-            texture = visual.getTexture(speed);
-        } else {
-            texture = visual.getTexture(null);
-        }
-        return texture;
     }
 
 }

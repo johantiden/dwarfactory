@@ -13,7 +13,7 @@ import com.github.johantiden.dwarfactory.components.SpeedComponent;
 
 public class CameraControlSystem extends EntitySystem {
 
-    private static final float ACCELERATION_FROM_KEY_PANNING = 1000;
+    private static final float ACCELERATION_FROM_KEY_PANNING = 2000;
 
     private final OrthographicCamera camera;
     private final Entity cameraEntity;

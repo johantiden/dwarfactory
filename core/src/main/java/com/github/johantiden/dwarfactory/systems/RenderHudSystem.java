@@ -5,9 +5,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
+import com.github.johantiden.dwarfactory.util.FontUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,16 +23,7 @@ public class RenderHudSystem extends EntitySystem {
     public RenderHudSystem(Camera camera) {
         this.camera = camera;
         batch = new SpriteBatch();
-        font = getFont();
-    }
-
-    private static BitmapFont getFont() {
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PlayfairDisplay-Regular.ttf"));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 32;
-        BitmapFont font12 = generator.generateFont(parameter); // font size 12 pixels
-        generator.dispose(); // don't forget to dispose to avoid memory leaks!
-        return font12;
+        font = FontUtil.getFont(32);
     }
 
     @Override

@@ -12,17 +12,42 @@ import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 
-public class Factory {
-    public static void createFactory(TileCoordinate position, PooledEngine engine) {
+public class Factory implements ItemReceiver<Apple>, ItemProducer<Apple> {
+    private final Entity entity;
+
+    private final ItemStack<Apple> outputStack = new AppleStack(100);
+    private final ItemStack<Apple> inputStack = new AppleStack(0);
+
+    public Factory(Entity entity) {
+        this.entity = entity;
+    }
+
+    public static Factory createFactory(TileCoordinate position, PooledEngine engine) {
         float tileBuildingInset = 5f;
         float factorySize = TILE_SIZE * 3 - tileBuildingInset * 2;
 
         Vector2 centerInWorld = CoordinateUtil.tileCenterToWorld(position);
 
-        Entity boi = engine.createEntity();
-        boi.add(new PositionComponent(centerInWorld.x, centerInWorld.y));
-        boi.add(new SizeComponent(factorySize, factorySize));
-        boi.add(VisualComponent.createStatic(Assets.FACTORY));
-        engine.addEntity(boi);
+        Entity entity = engine.createEntity();
+        entity.add(new PositionComponent(centerInWorld.x, centerInWorld.y));
+        entity.add(new SizeComponent(factorySize, factorySize));
+        entity.add(VisualComponent.createStatic(Assets.FACTORY));
+        engine.addEntity(entity);
+        return new Factory(entity);
+    }
+
+    @Override
+    public ItemStack<Apple> drain(int amount) {
+        return outputStack.tryDrain(amount);
+    }
+
+    @Override
+    public void accept(ItemStack<Apple> itemStack) {
+        inputStack.takeAllFrom(itemStack);
+    }
+
+    @Override
+    public Entity getEntity() {
+        return entity;
     }
 }

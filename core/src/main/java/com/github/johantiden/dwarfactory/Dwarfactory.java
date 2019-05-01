@@ -11,10 +11,11 @@ import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.World;
-import com.github.johantiden.dwarfactory.game.entities.Boi;
+import com.github.johantiden.dwarfactory.game.entities.AppleBoi;
 import com.github.johantiden.dwarfactory.game.entities.Factory;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.AccelerationSystem;
+import com.github.johantiden.dwarfactory.systems.BoiControlSystem;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.MovementSystem;
 import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
@@ -48,6 +49,7 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(renderForegroundSystem);
         renderHudSystem = new RenderHudSystem(camera);
         engine.addSystem(renderHudSystem);
+        engine.addSystem(new BoiControlSystem());
 
         MyInputProcessor inputProcessor = new MyInputProcessor(camera, onMouseMoved());
         Gdx.input.setInputProcessor(inputProcessor);
@@ -77,11 +79,11 @@ public class Dwarfactory extends ApplicationAdapter {
     }
 
     private void createGameEntities() {
-        Factory.createFactory(new TileCoordinate(3,7), engine);
-        Factory.createFactory(new TileCoordinate(7,4), engine);
+        Factory source = Factory.createFactory(new TileCoordinate(3,7), engine);
+        Factory target = Factory.createFactory(new TileCoordinate(7,4), engine);
 
         for (int i = 0; i < 10; i++) {
-            Boi.createRandomBoi(engine);
+            AppleBoi.createRandomBoi(engine, target, source);
         }
     }
 

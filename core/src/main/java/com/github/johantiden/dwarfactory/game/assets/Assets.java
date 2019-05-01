@@ -12,6 +12,9 @@ public class Assets {
             TextureUtil.loadTextureWithMipMap("buildings.png"),
             0, 1304, 128, 128);
 
+    public static final TextureRegion BOX = new TextureRegion(
+            TextureUtil.loadTextureWithMipMap("crate.jpg"));
+
     private static TextureRegion getRegion(Texture spriteSheet, ImmutableRectangleInt rectangle) {
         return new TextureRegion(spriteSheet, rectangle.x, rectangle.y, rectangle.width, rectangle.height);
     }
