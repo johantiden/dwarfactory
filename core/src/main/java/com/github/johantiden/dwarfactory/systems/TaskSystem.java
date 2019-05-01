@@ -7,12 +7,17 @@ import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.github.johantiden.dwarfactory.Dwarfactory;
+import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
+import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
 import com.github.johantiden.dwarfactory.components.TaskComponent;
+import com.github.johantiden.dwarfactory.components.TaskContext;
 
 public class TaskSystem extends EntitySystem {
     public ImmutableArray<Entity> entities;
 
     private ComponentMapper<TaskComponent> taskManager = ComponentMapper.getFor(TaskComponent.class);
+    private ComponentMapper<ItemProducerComponent> itemProducerMapper = ComponentMapper.getFor(ItemProducerComponent.class);
+    private ComponentMapper<ItemConsumerComponent> itemConsumerMapper = ComponentMapper.getFor(ItemConsumerComponent.class);
 
     @Override
     public void addedToEngine (Engine engine) {
@@ -32,10 +37,13 @@ public class TaskSystem extends EntitySystem {
         for (Entity entity : entities) {
 
             TaskComponent task = taskManager.get(entity);
-            task.addTime(deltaTime);
+            ItemProducerComponent itemProducerComponent = itemProducerMapper.has(entity) ? itemProducerMapper.get(entity) : null;
+            ItemConsumerComponent itemConsumerComponent = itemConsumerMapper.has(entity) ? itemConsumerMapper.get(entity) : null;
+            TaskContext taskContext = new TaskContext(itemProducerComponent, itemConsumerComponent);
+            task.addTime(taskContext, deltaTime);
 
-            if (task.isComplete()) {
-                task.finish();
+            if (task.isComplete(taskContext)) {
+                task.finish(taskContext);
             }
         }
     }

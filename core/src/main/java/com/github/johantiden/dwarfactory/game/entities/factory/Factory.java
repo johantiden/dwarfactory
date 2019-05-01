@@ -5,39 +5,41 @@ import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
+import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.TaskComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.assets.Assets;
-import com.github.johantiden.dwarfactory.game.entities.Apple;
-import com.github.johantiden.dwarfactory.game.entities.AppleStack;
+import com.github.johantiden.dwarfactory.game.entities.Boi;
+import com.github.johantiden.dwarfactory.game.entities.EntityRenderer;
+import com.github.johantiden.dwarfactory.game.entities.ImmutableItemStack;
 import com.github.johantiden.dwarfactory.game.entities.ItemStack;
+import com.github.johantiden.dwarfactory.game.entities.RenderContext;
 import com.github.johantiden.dwarfactory.game.entities.StringOverlayVisual;
+import com.github.johantiden.dwarfactory.game.entities.VisualEmpty;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 
-public class Factory implements ItemReceiver<Apple>, ItemProducer<Apple> {
-    public static final int INPUT_COST_PER_TASK = 1;
+public class Factory {
+    public static final int FONT_SIZE = 30;
 
-    private final Entity entity;
+    private final Recipe recipe;
 
-    private final ItemStack<Apple> outputStack;
-    private final ItemStack<Apple> inputStack;
-
-    public Factory(Entity entity, int initialOutput, int initialInput) {
-        this.entity = entity;
-        this.outputStack = new AppleStack(initialOutput);
-        this.inputStack = new AppleStack(initialInput);
+    public Factory(Recipe recipe) {
+        this.recipe = recipe;
     }
 
-    public static Factory createFactory(TileCoordinate position, PooledEngine engine, int initialOutput, int initialInput) {
+    public static void createFactory(TileCoordinate position, PooledEngine engine, int initialOutput, int initialInput, Recipe recipe, double numBois) {
         Entity entity = engine.createEntity();
-        Factory factory = new Factory(entity, initialOutput, initialInput);
+        Factory factory = new Factory(recipe);
 
         float tileBuildingInset = 5f;
         float factorySize = TILE_SIZE - tileBuildingInset * 2;
@@ -47,25 +49,44 @@ public class Factory implements ItemReceiver<Apple>, ItemProducer<Apple> {
         entity.add(new PositionComponent(centerInWorld.x, centerInWorld.y));
         entity.add(new SizeComponent(factorySize, factorySize));
         VisualComponent mainVisual = VisualComponent.createStatic(Assets.FACTORY);
+
+        entity.add(createTask(factory));
+        List<ItemType> resultTypes = recipe.getResultTypes();
+        ItemProducerComponent itemProducerComponent = new ItemProducerComponent(entity, resultTypes);
+        entity.add(itemProducerComponent);
+
+        List<ItemType> ingredientTypes = recipe.getIngredientTypes();
+        ItemConsumerComponent itemConsumerComponent = new ItemConsumerComponent(entity, ingredientTypes);
+        entity.add(itemConsumerComponent);
+
         VisualComponent fullVisual = VisualComponent.blend(
                 mainVisual,
                 visualizeProgress(),
-                visualizeOutput(factory),
-                visualizeInput(factory));
+                visualizeStacks(itemProducerComponent.getAvailableOutput(), new Color(0, 1, 0, 1), new Vector2(0, -TILE_SIZE / 2 + FONT_SIZE)),
+                visualizeStacks(itemConsumerComponent.getCurrentBuffer(), new Color(0, 1, 1, 1), new Vector2(-TILE_SIZE / 2, -TILE_SIZE / 2 + FONT_SIZE)));
         entity.add(fullVisual);
-        entity.add(createTask(factory));
         engine.addEntity(entity);
-        return factory;
+
+        for (int i = 0; i < numBois; i++) {
+            Boi.createBoi(centerInWorld.x, centerInWorld.y, 0, 0, engine, itemProducerComponent);
+        }
     }
 
     private static TaskComponent createTask(Factory factory) {
         return new TaskComponent(
-                3f,
-                () -> {
-                    factory.outputStack.add(1);
-                    factory.inputStack.sub(INPUT_COST_PER_TASK);
+                factory.recipe.time,
+                taskContext -> {
+                    for (ImmutableItemStack result : factory.recipe.result) {
+                        taskContext.itemProducer.add(result);
+                    }
+
+                    for (ImmutableItemStack ingredient : factory.recipe.ingredients) {
+                        taskContext.itemConsumerComponent.sub(ingredient);
+                    }
                 },
-                () -> factory.inputStack.getAmount() >= INPUT_COST_PER_TASK
+                taskContext -> factory.recipe.ingredients.stream()
+                        .allMatch(ingredient ->
+                                taskContext.itemConsumerComponent.get(ingredient.itemType).getAmount() >= ingredient.getAmount())
         );
     }
 
@@ -73,61 +94,35 @@ public class Factory implements ItemReceiver<Apple>, ItemProducer<Apple> {
         int progressHeight = 20;
 
         return new VisualComponent(
-                renderContext -> {
-                    SizeComponent size = renderContext.size;
-                    PositionComponent position = renderContext.position;
-                    TaskComponent task = renderContext.task;
-                    float progress = task.getProgressRatio();
-                    if (task.canRun()) {
-                        renderContext.shapeRenderer.setColor(0, 1, 0, 1);
-                    } else {
-                        renderContext.shapeRenderer.setColor(1, 0, 0, 1);
-                    }
+                new EntityRenderer() {
+                    @Override
+                    public void renderShapes(ShapeRenderer shapeRenderer, RenderContext renderContext) {
+                        SizeComponent size = renderContext.size;
+                        PositionComponent position = renderContext.position;
+                        TaskComponent task = renderContext.task;
+                        float progress = task.getProgressRatio();
+                        shapeRenderer.setColor(0, 1, 0, 1);
 
-                    if (progress > 0.001) {
-                        renderContext.shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-                        renderContext.shapeRenderer.rect(
-                                position.x - size.x / 2,
-                                position.y + size.y /2 - progressHeight,
-                                progress * size.x,
-                                progressHeight
-                        );
-                    }
-                }
-        );
-    }
-
-    private static VisualComponent visualizeOutput(Factory factory) {
-        return visualizeStack(factory.outputStack, new Color(0, 1, 0, 1), new Vector2(0, -TILE_SIZE/2));
-    }
-
-    private static VisualComponent visualizeInput(Factory factory) {
-        return visualizeStack(factory.inputStack, new Color(0, 1, 1, 1), new Vector2(0, TILE_SIZE/2));
-    }
-
-    private static VisualComponent visualizeStack(ItemStack<Apple> itemStack, Color color, Vector2 offset) {
-        return StringOverlayVisual.create(color, 50,
-                offset, () -> {
-                    if (itemStack.getAmount() > 0) {
-                        return Optional.of(String.valueOf(itemStack.getAmount()));
-                    } else {
-                        return Optional.empty();
+                        if (progress > 0.001) {
+                            shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+                            shapeRenderer.rect(
+                                    position.x - size.x / 2,
+                                    position.y + size.y / 2 - progressHeight,
+                                    progress * size.x,
+                                    progressHeight
+                            );
+                        }
                     }
                 });
     }
 
-    @Override
-    public ItemStack<Apple> drain(int amount) {
-        return outputStack.tryDrain(amount);
+    private static VisualComponent visualizeStacks(Collection<ItemStack> itemStacks, Color color, Vector2 offset) {
+        return itemStacks.stream()
+                .filter(itemStack -> itemStack.getAmount() > 0)
+                .map(itemStack -> StringOverlayVisual.create(color, FONT_SIZE,
+                        offset, () -> Optional.of(String.valueOf(itemStack.getAmount()))))
+                .reduce((a, b) -> VisualComponent.blend(a, b))
+                .orElse(VisualEmpty.create());
     }
 
-    @Override
-    public void accept(ItemStack<Apple> itemStack) {
-        inputStack.takeAllFrom(itemStack);
-    }
-
-    @Override
-    public Entity getEntity() {
-        return entity;
-    }
 }

@@ -1,4 +1,4 @@
-package com.github.johantiden.dwarfactory.systems;
+package com.github.johantiden.dwarfactory.systems.physics;
 
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Engine;

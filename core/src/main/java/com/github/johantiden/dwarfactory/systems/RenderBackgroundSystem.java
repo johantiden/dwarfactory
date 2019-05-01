@@ -5,9 +5,10 @@ import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.Dwarfactory;
 import com.github.johantiden.dwarfactory.game.World;
-import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
@@ -53,6 +54,19 @@ public class RenderBackgroundSystem extends EntitySystem {
     }
 
     private Rectangle getClipInWorld() {
-        return CoordinateUtil.screenToWorld(new ImmutableRectangleInt(0, 0, Dwarfactory.VIEWPORT_WIDTH, Dwarfactory.VIEWPORT_HEIGHT), camera);
+        Vector2 screenTopLeftInWorld = CoordinateUtil.screenToWorld(new ImmutableVector2Int(0, 0), camera);
+        Vector2 screenBottomRightInWorld = CoordinateUtil.screenToWorld(new ImmutableVector2Int(Dwarfactory.VIEWPORT_WIDTH, Dwarfactory.VIEWPORT_HEIGHT), camera);
+
+        float minX = Math.min(screenTopLeftInWorld.x, screenBottomRightInWorld.x);
+        float maxX = Math.max(screenTopLeftInWorld.x, screenBottomRightInWorld.x);
+        float minY = Math.min(screenTopLeftInWorld.y, screenBottomRightInWorld.y);
+        float maxY = Math.max(screenTopLeftInWorld.y, screenBottomRightInWorld.y);
+
+        Rectangle clipInWorld = new Rectangle(
+                minX, minY,
+                maxX - minX,
+                maxY - minY
+        );
+        return clipInWorld;
     }
 }

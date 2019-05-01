@@ -3,7 +3,6 @@ package com.github.johantiden.dwarfactory.game;
 import java.util.Objects;
 
 public class TileCoordinate {
-    public static final int TILE_SIZE = 100;
 
     public final int x;
     public final int y;

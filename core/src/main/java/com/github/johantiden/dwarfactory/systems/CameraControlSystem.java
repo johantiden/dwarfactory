@@ -19,7 +19,7 @@ public class CameraControlSystem extends EntitySystem {
     private final Entity cameraEntity;
     private final ComponentMapper<SpeedComponent> speedMapper = ComponentMapper.getFor(SpeedComponent.class);
     private final ComponentMapper<AccelerationComponent> accelerationMapper = ComponentMapper.getFor(AccelerationComponent.class);
-    private final ComponentMapper<PositionComponent> positionComponentMapper = ComponentMapper.getFor(PositionComponent.class);
+    private final ComponentMapper<PositionComponent> positionMapper = ComponentMapper.getFor(PositionComponent.class);
 
     private final PositionComponent lastCameraPosition = new PositionComponent(0, 0);
 
@@ -57,7 +57,7 @@ public class CameraControlSystem extends EntitySystem {
         }
 
 
-        PositionComponent cameraPosition = positionComponentMapper.get(cameraEntity);
+        PositionComponent cameraPosition = positionMapper.get(cameraEntity);
         float cameraDx = cameraPosition.x - lastCameraPosition.x;
         float cameraDy = cameraPosition.y - lastCameraPosition.y;
         lastCameraPosition.x = cameraPosition.x;
@@ -100,9 +100,9 @@ public class CameraControlSystem extends EntitySystem {
         if (isUp == isDown) {
             return 0;
         } else if (isUp) {
-            return -ACCELERATION_FROM_KEY_PANNING;
-        } else /*isDown*/ {
             return ACCELERATION_FROM_KEY_PANNING;
+        } else /*isDown*/ {
+            return -ACCELERATION_FROM_KEY_PANNING;
         }
     }
 

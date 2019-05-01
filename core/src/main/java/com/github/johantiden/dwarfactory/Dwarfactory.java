@@ -11,17 +11,18 @@ import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.World;
-import com.github.johantiden.dwarfactory.game.entities.AppleBoi;
 import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
+import com.github.johantiden.dwarfactory.game.entities.factory.Recipies;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
-import com.github.johantiden.dwarfactory.systems.AccelerationSystem;
-import com.github.johantiden.dwarfactory.systems.BoiControlSystem;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
-import com.github.johantiden.dwarfactory.systems.MovementSystem;
+import com.github.johantiden.dwarfactory.systems.ControlSystem;
 import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
 import com.github.johantiden.dwarfactory.systems.RenderForegroundSystem;
 import com.github.johantiden.dwarfactory.systems.RenderHudSystem;
 import com.github.johantiden.dwarfactory.systems.TaskSystem;
+import com.github.johantiden.dwarfactory.systems.physics.AccelerationSystem;
+import com.github.johantiden.dwarfactory.systems.physics.ForceSystem;
+import com.github.johantiden.dwarfactory.systems.physics.MovementSystem;
 
 import java.util.function.Consumer;
 
@@ -42,6 +43,7 @@ public class Dwarfactory extends ApplicationAdapter {
 
         OrthographicCamera camera = createCamera();
 
+        engine.addSystem(new ForceSystem());
         engine.addSystem(new AccelerationSystem());
         engine.addSystem(new MovementSystem());
 
@@ -50,7 +52,7 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(renderForegroundSystem);
         renderHudSystem = new RenderHudSystem(camera);
         engine.addSystem(renderHudSystem);
-        engine.addSystem(new BoiControlSystem());
+        engine.addSystem(new ControlSystem());
         engine.addSystem(new TaskSystem());
 
         MyInputProcessor inputProcessor = new MyInputProcessor(camera, onMouseMoved());
@@ -62,7 +64,7 @@ public class Dwarfactory extends ApplicationAdapter {
     private OrthographicCamera createCamera() {
         OrthographicCamera camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.position.set(0, 0, 0);
-        camera.setToOrtho(true);
+//        camera.setToOrtho(false);
         camera.update();
         Entity cameraEntity = engine.createEntity();
         cameraEntity.add(new PositionComponent(0, 0));
@@ -81,12 +83,12 @@ public class Dwarfactory extends ApplicationAdapter {
     }
 
     private void createGameEntities() {
-        Factory source = Factory.createFactory(new TileCoordinate(3,7), engine, 12, 4);
-        Factory target = Factory.createFactory(new TileCoordinate(7,4), engine, 2, 4);
+        Factory.createFactory(new TileCoordinate(3,7), engine, 12, 4, Recipies.APPLE_GARDEN, 1);
+        Factory.createFactory(new TileCoordinate(3,8), engine, 12, 4, Recipies.APPLE_GARDEN, 1);
+        Factory.createFactory(new TileCoordinate(3,9), engine, 12, 4, Recipies.APPLE_GARDEN, 1);
 
-        for (int i = 0; i < 10; i++) {
-            AppleBoi.createRandomBoi(engine, target, source);
-        }
+        Factory.createFactory(new TileCoordinate(7,4), engine, 2, 4, Recipies.APPLE_JUICER, 0);
+        Factory.createFactory(new TileCoordinate(7,2), engine, 2, 4, Recipies.APPLE_JUICER, 0);
     }
 
     public static void log(String string) {

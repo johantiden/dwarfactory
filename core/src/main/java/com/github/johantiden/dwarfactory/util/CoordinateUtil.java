@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.math.ImmutableVector2;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
@@ -15,6 +16,11 @@ public class CoordinateUtil {
     public static Vector2 screenToWorld(ImmutableVector2Int screenPoint, Camera camera) {
         Vector3 unprojected = camera.unproject(new Vector3(screenPoint.x, screenPoint.y, 0));
         return new Vector2(unprojected.x, unprojected.y);
+    }
+
+    public static ImmutableVector2 worldToScreen(Vector2 worldPoint, Camera camera) {
+        Vector3 projected = camera.project(new Vector3(worldPoint.x, worldPoint.y, 0));
+        return new ImmutableVector2(projected.x, projected.y);
     }
 
     public static Rectangle screenToWorld(ImmutableRectangleInt screenRectangle, Camera camera) {

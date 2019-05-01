@@ -13,25 +13,27 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
+import com.github.johantiden.dwarfactory.components.ForceContext;
+import com.github.johantiden.dwarfactory.components.ForcesComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.TaskComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
-import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
 import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
-import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
-import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
+import java.util.List;
 
 public class RenderForegroundSystem extends EntitySystem {
+    private static final boolean DRAW_DEBUG = true;
     private ImmutableVector2Int mouseScreenCoordinates;
     private final Texture mouseTileTexture;
 
     private ImmutableArray<Entity> entitites;
 
     private final SpriteBatch spriteBatch;
+    private final SpriteBatch unprojectedSpriteBatch;
     private final ShapeRenderer shapeRenderer;
     private final ShapeRenderer debugShapeRenderer;
 
@@ -43,9 +45,11 @@ public class RenderForegroundSystem extends EntitySystem {
     private final ComponentMapper<VisualComponent> visualManager = ComponentMapper.getFor(VisualComponent.class);
     private final ComponentMapper<SizeComponent> sizeManager = ComponentMapper.getFor(SizeComponent.class);
     private final ComponentMapper<AccelerationComponent> accelerationManager = ComponentMapper.getFor(AccelerationComponent.class);
+    private final ComponentMapper<ForcesComponent> forcesManager = ComponentMapper.getFor(ForcesComponent.class);
 
     public RenderForegroundSystem(Camera camera) {
         this.spriteBatch = new SpriteBatch();
+        unprojectedSpriteBatch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer(100);
         this.debugShapeRenderer = new ShapeRenderer(100);
         this.camera = camera;
@@ -63,18 +67,71 @@ public class RenderForegroundSystem extends EntitySystem {
 
     @Override
     public void removedFromEngine (Engine engine) {
+        entitites = null;
     }
 
     @Override
     public void update(float deltaTime) {
         drawForeground();
-        drawDebug();
+
     }
 
     private void drawForeground() {
+
+
+        renderSprites();
+        renderUnprojected();
+        renderShapes();
+
+//        if (mouseScreenCoordinates != null) {
+//            TileCoordinate mouseTilePosition = CoordinateUtil.screenToTile(mouseScreenCoordinates, camera);
+//            spriteBatch.draw(mouseTileTexture,
+//                    TILE_SIZE * mouseTilePosition.x,
+//                    TILE_SIZE * mouseTilePosition.y,
+//                    TILE_SIZE,
+//                    TILE_SIZE);
+//        }
+
+        if (DRAW_DEBUG) {
+            debugRender();
+        }
+    }
+
+    private void renderSprites() {
         spriteBatch.setProjectionMatrix(camera.combined);
-        shapeRenderer.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
+
+        for (Entity entity : entitites) {
+            PositionComponent position = positionManager.get(entity);
+            SizeComponent size = sizeManager.get(entity);
+            VisualComponent visual = visualManager.get(entity);
+            SpeedComponent speed = speedManager.has(entity) ? speedManager.get(entity) : null;
+            TaskComponent task = taskManager.has(entity) ? taskManager.get(entity) : null;
+
+            visual.renderSprites(spriteBatch, new RenderContext(speed, position, size, task));
+        }
+
+        spriteBatch.end();
+    }
+
+    private void renderUnprojected() {
+        unprojectedSpriteBatch.begin();
+
+        for (Entity entity : entitites) {
+            PositionComponent position = positionManager.get(entity);
+            SizeComponent size = sizeManager.get(entity);
+            VisualComponent visual = visualManager.get(entity);
+            SpeedComponent speed = speedManager.has(entity) ? speedManager.get(entity) : null;
+            TaskComponent task = taskManager.has(entity) ? taskManager.get(entity) : null;
+
+            visual.renderSpritesUnprojected(unprojectedSpriteBatch, new RenderContext(speed, position, size, task));
+        }
+
+        unprojectedSpriteBatch.end();
+    }
+
+    private void renderShapes() {
+        shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.setAutoShapeType(true);
         shapeRenderer.begin();
 
@@ -85,31 +142,38 @@ public class RenderForegroundSystem extends EntitySystem {
             SpeedComponent speed = speedManager.has(entity) ? speedManager.get(entity) : null;
             TaskComponent task = taskManager.has(entity) ? taskManager.get(entity) : null;
 
-            visual.draw(new RenderContext(spriteBatch, shapeRenderer, debugShapeRenderer, speed, position, size, task));
-        }
-
-        if (mouseScreenCoordinates != null) {
-            TileCoordinate mouseTilePosition = CoordinateUtil.screenToTile(mouseScreenCoordinates, camera);
-            spriteBatch.draw(mouseTileTexture,
-                    TILE_SIZE * mouseTilePosition.x,
-                    TILE_SIZE * mouseTilePosition.y,
-                    TILE_SIZE,
-                    TILE_SIZE);
+            visual.renderShapes(shapeRenderer, new RenderContext(speed, position, size, task));
         }
 
         shapeRenderer.end();
-        spriteBatch.end();
     }
 
-    private void drawDebug() {
+    private void debugRenderEntities() {
+        for (Entity entity : entitites) {
+            PositionComponent position = positionManager.get(entity);
+            SizeComponent size = sizeManager.get(entity);
+            VisualComponent visual = visualManager.get(entity);
+            SpeedComponent speed = speedManager.has(entity) ? speedManager.get(entity) : null;
+            TaskComponent task = taskManager.has(entity) ? taskManager.get(entity) : null;
+
+            visual.debugRenderShapes(debugShapeRenderer, new RenderContext(speed, position, size, task));
+        }
+
+    }
+
+
+    private void debugRender() {
 
         debugShapeRenderer.setProjectionMatrix(camera.combined);
         debugShapeRenderer.setAutoShapeType(true);
         debugShapeRenderer.begin();
 
+        debugRenderEntities();
+
         debugDrawCoordinateLines();
 //        debugDrawBoundingBoxes();
         debugDrawSpeed();
+        debugDrawForces();
         debugDrawAcceleration();
 
         debugShapeRenderer.end();
@@ -146,6 +210,29 @@ public class RenderForegroundSystem extends EntitySystem {
                         position.x, position.y,
                         point.x, point.y
                 );
+            }
+        }
+    }
+
+    private void debugDrawForces() {
+        debugShapeRenderer.setColor(0, 0, 1, 1);
+        debugShapeRenderer.set(ShapeRenderer.ShapeType.Line);
+
+        for (Entity entity : entitites) {
+            if (forcesManager.has(entity)) {
+                PositionComponent position = positionManager.get(entity);
+                ForcesComponent forces = forcesManager.get(entity);
+                SpeedComponent speed = speedManager.get(entity);
+
+                List<Vector2> forcesList = forces.getForces(new ForceContext(speed));
+                for (Vector2 force : forcesList) {
+                    Vector2 point = position.cpy().add(force.cpy().scl(1));
+                    debugShapeRenderer.line(
+                            position.x, position.y,
+                            point.x, point.y
+                    );
+                }
+
             }
         }
     }

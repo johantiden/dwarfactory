@@ -1,41 +1,21 @@
 package com.github.johantiden.dwarfactory.components;
 
 import com.badlogic.ashley.core.Component;
-import com.badlogic.ashley.core.ComponentMapper;
-import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.math.Vector2;
+import com.github.johantiden.dwarfactory.game.entities.SelectJobContext;
+import com.github.johantiden.dwarfactory.systems.physics.Force;
 
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 public class ControlComponent implements Component {
-    public static final int RANGE_SQUARED = 400;
 
-    private final Supplier<Job> jobSelector;
+    private final Function<SelectJobContext, Job> jobSelector;
 
     private Job job;
 
-    private final ComponentMapper<PositionComponent> positionMapper = ComponentMapper.getFor(PositionComponent.class);
+    public ControlComponent(Function<SelectJobContext, Job> jobSelector) {this.jobSelector = jobSelector;}
 
-    public ControlComponent(Supplier<Job> jobSelector) {this.jobSelector = jobSelector;}
-
-    public boolean isInRange(PositionComponent entityPosition) {
-        Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        PositionComponent targetPosition = getTargetPosition();
-        return entityPosition
-                .cpy()
-                .sub(targetPosition)
-                .len2() < RANGE_SQUARED;
-    }
-
-    private PositionComponent getTargetPosition() {
-        Entity target = job.target;
-        return positionMapper.get(target);
-    }
-
-    public Entity getTarget() {
-        Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        return job.target;
-    }
 
     public boolean hasJob() {
         return job != null;
@@ -43,22 +23,44 @@ public class ControlComponent implements Component {
 
     public void finishJob() {
         Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        job.finishCallback.run();
+        job.finish();
         job = null;
     }
 
-    public void trySelectNewJob() {
-        Job job = jobSelector.get();
+    public void trySelectNewJob(SelectJobContext selectJobContext) {
+        Job job = jobSelector.apply(selectJobContext);
         this.job = job;
     }
 
-    public static class Job {
-        private final Entity target;
-        private final Runnable finishCallback;
+    public boolean canFinishJob() {
+        Objects.requireNonNull(job, "job == null. Call hasJob first!");
+        return job.canFinishJob();
+    }
 
-        public Job(Entity target, Runnable finishCallback) {
-            this.target = target;
-            this.finishCallback = finishCallback;
-        }
+    public boolean isJobFailed() {
+        Objects.requireNonNull(job, "job == null. Call hasJob first!");
+        return job.isJobFailed();
+    }
+
+
+    public void fail() {
+        Objects.requireNonNull(job, "job == null. Call hasJob first!");
+        job.fail();
+        job = null;
+    }
+
+    public Vector2 getWantedForce(ForceContext forceContext) {
+        Objects.requireNonNull(job, "job == null. Call hasJob first!");
+        return job.getWantedAcceleration(forceContext);
+    }
+
+    public Force asForce() {
+        return forceContext -> {
+            if (job != null) {
+                return getWantedForce(forceContext);
+            } else {
+                return new Vector2(0, 0);
+            }
+        };
     }
 }

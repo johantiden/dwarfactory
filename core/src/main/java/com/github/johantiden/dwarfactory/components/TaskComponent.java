@@ -2,39 +2,40 @@ package com.github.johantiden.dwarfactory.components;
 
 import com.badlogic.ashley.core.Component;
 
-import java.util.function.Supplier;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class TaskComponent implements Component {
 
     private final float totalTaskTime;
-    private final Runnable finishCallback;
-    private final Supplier<Boolean> canRun;
+    private final Consumer<TaskContext> finishCallback;
+    private final Predicate<TaskContext> canRun;
 
     private float timeSpent;
 
-    public TaskComponent(float totalTaskTime, Runnable finishCallback, Supplier<Boolean> canRun) {
+    public TaskComponent(float totalTaskTime, Consumer<TaskContext> finishCallback, Predicate<TaskContext> canRun) {
         this.totalTaskTime = totalTaskTime;
         this.finishCallback = finishCallback;
         this.canRun = canRun;
     }
 
-    public void addTime(float deltaTime) {
-        if (canRun()) {
+    public void addTime(TaskContext taskContext, float deltaTime) {
+        if (canRun(taskContext)) {
             timeSpent += deltaTime;
         }
     }
 
-    public Boolean canRun() {
-        return canRun.get();
+    public Boolean canRun(TaskContext taskContext) {
+        return canRun.test(taskContext);
     }
 
-    public boolean isComplete() {
-        return canRun() && timeSpent > totalTaskTime;
+    public boolean isComplete(TaskContext taskContext) {
+        return canRun(taskContext) && timeSpent > totalTaskTime;
     }
 
-    public void finish() {
-        finishCallback.run();
-        if (!canRun()) {
+    public void finish(TaskContext taskContext) {
+        finishCallback.accept(taskContext);
+        if (!canRun(taskContext)) {
             // We can't continue immediately, discard the remaining time spent.
             timeSpent = 0;
         } else {
