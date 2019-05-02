@@ -43,7 +43,8 @@ public class ItemConsumerComponent implements Component {
 
     public boolean wants(ItemType itemType) {
         return bag.canHaveType(itemType) &&
-                bag.canFitSome(itemType);
+                bag.canFitSome(itemType) &&
+                priority.wantsItems();
     }
 
     public void output(ImmutableItemStack itemStack) {
@@ -68,5 +69,15 @@ public class ItemConsumerComponent implements Component {
 
     public Priority getPriority() {
         return priority;
+    }
+
+    public boolean hasEmptyInput() {
+        return bag.snapshot().getSmallestStack()
+                .map(smallestStack -> smallestStack.amount == 0)
+                .orElse(true);
+    }
+
+    public boolean canFitSome(ItemType itemType) {
+        return bag.canFitSome(itemType);
     }
 }

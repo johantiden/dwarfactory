@@ -9,6 +9,7 @@ import com.github.johantiden.dwarfactory.game.entities.ItemStack;
 import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public class ItemProducerComponent implements Component {
@@ -70,20 +71,13 @@ public class ItemProducerComponent implements Component {
         return priority;
     }
 
-    public ImmutableItemStack getBiggestStack() {
-        if (bag.isEmpty()) {
-            throw new IllegalStateException("You can't get the biggest stack! The bag is empty!");
-        }
+    public Optional<ImmutableItemStack> getBiggestStack() {
         return bag.getBiggestStack();
     }
 
     public boolean hasFullOutput() {
-        ImmutableBag availableOutput = getAvailableOutput();
-        if (availableOutput.isEmpty()) {
-            return false;
-        }
-        ImmutableItemStack biggestStack = availableOutput.getBiggestStack();
-
-        return biggestStack.amount == ItemStack.MAX_AMOUNT;
+        return getBiggestStack()
+                .map(biggestStack -> biggestStack.amount == ItemStack.MAX_AMOUNT)
+                .orElse(false);
     }
 }

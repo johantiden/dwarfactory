@@ -4,7 +4,6 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ObjectMap.Entry;
 import com.github.czyzby.kiwi.util.gdx.collection.immutable.ImmutableObjectMap;
 import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
-import jdk.nashorn.internal.ir.annotations.Immutable;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -28,22 +27,30 @@ public class ImmutableBag {
         return new ImmutableBag(new ImmutableObjectMap<>(newMap));
     }
 
-    public Optional<ImmutableItemStack> findAny() {
-        if (stacks.isEmpty()) {
+    public Optional<ImmutableItemStack> getBiggestStack() {
+        if (isEmpty()) {
             return Optional.empty();
-        } else {
-            return Optional.of(stacks.values().next());
         }
-    }
-
-    public ImmutableItemStack getBiggestStack() {
         ImmutableItemStack biggest = stacks.values().next();
         for (ImmutableItemStack itemStack : stacks.values()) {
             if (itemStack.getAmount() > biggest.getAmount()) {
                 biggest = itemStack;
             }
         }
-        return biggest;
+        return Optional.of(biggest);
+    }
+
+    public Optional<ImmutableItemStack> getSmallestStack() {
+        if (isEmpty()) {
+            return Optional.empty();
+        }
+        ImmutableItemStack smallest = stacks.values().next();
+        for (ImmutableItemStack itemStack : stacks.values()) {
+            if (itemStack.getAmount() < smallest.getAmount()) {
+                smallest = itemStack;
+            }
+        }
+        return Optional.of(smallest);
     }
 
     public boolean isEmpty() {

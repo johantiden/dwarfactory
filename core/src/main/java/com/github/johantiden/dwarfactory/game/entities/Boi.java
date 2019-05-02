@@ -18,6 +18,7 @@ import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.assets.Assets;
 import com.github.johantiden.dwarfactory.game.entities.factory.House;
+import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
 import com.github.johantiden.dwarfactory.systems.physics.DragForce;
 import com.github.johantiden.dwarfactory.util.JLists;
 
@@ -25,6 +26,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -94,12 +98,12 @@ public class Boi {
         @Override
         public Job get() {
             if (carrying != null) {
-                Optional<ItemConsumerComponent> maybeNewConsumer = chooseTarget(selectJobContext);
+                Optional<ItemConsumerComponent> maybeNewConsumer = chooseTarget(selectJobContext, false);
                 return maybeNewConsumer
                         .map(this::deliveryJob)
                         .orElseGet(() -> {
                             // no one wants my stuff :( go home and wait
-                            return goHomeAndDropResourcesThenWait();
+                            return dropResourcesThenGoHomeAndWait();
                         });
 
             } else {
@@ -108,7 +112,7 @@ public class Boi {
                         .map(this::pickupJob)
                         .orElseGet(() -> {
                             // nothing to pick up.
-                            return goHomeAndDropResourcesThenWait();
+                            return dropResourcesThenGoHomeAndWait();
                         });
             }
         }
@@ -118,7 +122,8 @@ public class Boi {
 
                 @Override
                 public void finish() {
-                    ImmutableItemStack biggestStack = source.getBiggestStack();
+                    ImmutableItemStack biggestStack = source.getBiggestStack()
+                            .orElseThrow(() -> new IllegalStateException("There are no stacks to pickup from!"));
                     ItemStack newItemStack = source.output(biggestStack.itemType, MAX_CARRY);
                     if (newItemStack.getAmount() > 0) {
                         carrying = newItemStack;
@@ -146,9 +151,12 @@ public class Boi {
             };
         }
 
-        private Job goHomeAndDropResourcesThenWait() {
+        private Job dropResourcesThenGoHomeAndWait() {
             if (carrying != null) {
-                return deliveryJob(getHomeConsumer());
+                Optional<ItemConsumerComponent> backupConsumer = chooseTarget(selectJobContext, true);
+                if (backupConsumer.isPresent()) {
+                    return deliveryJob(backupConsumer.get());
+                }
             }
 
             if (!isHome()) {
@@ -173,10 +181,11 @@ public class Boi {
             };
         }
 
-        private Optional<ItemConsumerComponent> chooseTarget(SelectJobContext selectJobContext) {
-            List<ItemConsumerComponent> eligibleReceivers = JLists.stream(selectJobContext.allItemConsumers)
-                    .filter(itemConsumer -> itemConsumer.wants(carrying.itemType))
-                    .collect(Collectors.toList());
+        private Optional<ItemConsumerComponent> chooseTarget(SelectJobContext selectJobContext, boolean anyPriority) {
+            Predicate<ItemConsumerComponent> wants = itemConsumerComponent -> itemConsumerComponent.wants(carrying.itemType);
+            Predicate<ItemConsumerComponent> filter = anyPriority ? consumer -> consumer.canFitSome(carrying.itemType) : wants;
+
+            List<ItemConsumerComponent> eligibleReceivers = getFilteredConsumers(selectJobContext, filter);
 
             if (eligibleReceivers.isEmpty()) {
                 return Optional.empty();
@@ -184,7 +193,8 @@ public class Boi {
 
             eligibleReceivers.sort(
                     Comparator.comparing(ItemConsumerComponent::getPriority)
-                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(house.getEntity())));
+                            .thenComparing(Comparator.comparing(ItemConsumerComponent::hasEmptyInput).reversed())
+                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(boiEntity)));
 
             return Optional.of(eligibleReceivers.get(0));
         }
@@ -199,15 +209,32 @@ public class Boi {
             }
 
             eligibleProducers.sort(
-                    Comparator.comparing(ItemProducerComponent::getPriority)
+                    Comparator.comparing(anyoneWantsMyBiggestStack(selectJobContext, ItemConsumerComponent::wants)).reversed()
+                            .thenComparing(ItemProducerComponent::getPriority)
 //                            .thenComparing(Comparator.<ItemProducerComponent, Integer>comparing(p -> Math.min(p.getBiggestStack().getAmount(), MAX_CARRY)).reversed())
-                            .thenComparing(Comparator.<ItemProducerComponent, Boolean>comparing(itemProducerComponent -> itemProducerComponent.hasFullOutput()).reversed())
+//                            .thenComparing(Comparator.<ItemProducerComponent, Boolean>comparing(ItemProducerComponent::hasFullOutput).reversed())
 
-                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(boiEntity)));
-//                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(house.getEntity())));
+//                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(boiEntity)));
+                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(house.getEntity())));
 
 
             return Optional.of(eligibleProducers.get(0));
+        }
+
+        private Function<ItemProducerComponent, Boolean> anyoneWantsMyBiggestStack(SelectJobContext selectJobContext, BiPredicate<ItemConsumerComponent, ItemType> predicate) {
+            return itemProducerComponent ->
+                    itemProducerComponent.getBiggestStack()
+                            .map(biggestStack -> {
+                                List<ItemConsumerComponent> eligibleReceivers = getFilteredConsumers(selectJobContext, itemConsumer -> predicate.test(itemConsumer, biggestStack.itemType));
+                                return !eligibleReceivers.isEmpty();
+                            })
+                            .orElse(false);
+        }
+
+        private List<ItemConsumerComponent> getFilteredConsumers(SelectJobContext selectJobContext, Predicate<ItemConsumerComponent> filter) {
+            return JLists.stream(selectJobContext.allItemConsumers)
+                    .filter(filter)
+                    .collect(Collectors.toList());
         }
 
 

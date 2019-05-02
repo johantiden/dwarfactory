@@ -6,6 +6,7 @@ import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
 import com.github.johantiden.dwarfactory.struct.JMap;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public class Bag {
@@ -85,14 +86,17 @@ public class Bag {
         return new ImmutableArray<>(array);
     }
 
-    public ImmutableItemStack getBiggestStack() {
+    public Optional<ImmutableItemStack> getBiggestStack() {
+        if (isEmpty()) {
+            return Optional.empty();
+        }
         ItemStack biggest = stacks.values().next();
         for (ItemStack itemStack : stacks.values()) {
             if (itemStack.getAmount() > biggest.getAmount()) {
                 biggest = itemStack;
             }
         }
-        return biggest.snapshot();
+        return Optional.of(biggest.snapshot());
     }
 
     public boolean isEmpty() {

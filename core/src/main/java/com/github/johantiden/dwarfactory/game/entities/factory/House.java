@@ -33,7 +33,7 @@ public class House {
         entity.add(VisualComponent.createStatic(Assets.HOUSE));
         Bag bag = new Bag(type -> true);
         entity.add(ItemConsumerComponent.createWithSharedBag(entity, bag, Priority.LOW));
-        entity.add(ItemProducerComponent.createWithSharedBag(entity, bag, Priority.NORMAL));
+        entity.add(ItemProducerComponent.createWithSharedBag(entity, bag, Priority.HIGH));
         engine.addEntity(entity);
 
         House house = new House(entity);
