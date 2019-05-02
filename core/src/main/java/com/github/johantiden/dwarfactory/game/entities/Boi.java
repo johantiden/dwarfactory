@@ -35,7 +35,7 @@ public class Boi {
 
     private static final int MAX_CARRY = 5;
     public static final int SIZE = 32;
-    public static final int MAX_SPEED = 200;
+    public static final int MAX_SPEED = 20000;
     public static final float MOVE_FORCE = 1000;
 
     private final Entity boiEntity;
