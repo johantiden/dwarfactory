@@ -4,6 +4,7 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ObjectMap.Entry;
 import com.github.czyzby.kiwi.util.gdx.collection.immutable.ImmutableObjectMap;
 import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
+import jdk.nashorn.internal.ir.annotations.Immutable;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -35,7 +36,22 @@ public class ImmutableBag {
         }
     }
 
+    public ImmutableItemStack getBiggestStack() {
+        ImmutableItemStack biggest = stacks.values().next();
+        for (ImmutableItemStack itemStack : stacks.values()) {
+            if (itemStack.getAmount() > biggest.getAmount()) {
+                biggest = itemStack;
+            }
+        }
+        return biggest;
+    }
+
     public boolean isEmpty() {
-        return stacks.isEmpty();
+        for (ImmutableItemStack immutableItemStack : stacks.values()) {
+            if (immutableItemStack.amount > 0) {
+                return false;
+            }
+        }
+        return true;
     }
 }

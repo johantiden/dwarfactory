@@ -69,4 +69,21 @@ public class ItemProducerComponent implements Component {
     public Priority getPriority() {
         return priority;
     }
+
+    public ImmutableItemStack getBiggestStack() {
+        if (bag.isEmpty()) {
+            throw new IllegalStateException("You can't get the biggest stack! The bag is empty!");
+        }
+        return bag.getBiggestStack();
+    }
+
+    public boolean hasFullOutput() {
+        ImmutableBag availableOutput = getAvailableOutput();
+        if (availableOutput.isEmpty()) {
+            return false;
+        }
+        ImmutableItemStack biggestStack = availableOutput.getBiggestStack();
+
+        return biggestStack.amount == ItemStack.MAX_AMOUNT;
+    }
 }

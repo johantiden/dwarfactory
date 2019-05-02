@@ -118,16 +118,13 @@ public class Boi {
 
                 @Override
                 public void finish() {
-                    source.getAvailableOutput()
-                            .findAny()
-                            .ifPresent(outputStack -> {
-                                ItemStack newItemStack = source.output(outputStack.itemType, MAX_CARRY);
-                                if (newItemStack.getAmount() > 0) {
-                                    carrying = newItemStack;
-                                } else {
-                                    carrying = null;
-                                }
-                            });
+                    ImmutableItemStack biggestStack = source.getBiggestStack();
+                    ItemStack newItemStack = source.output(biggestStack.itemType, MAX_CARRY);
+                    if (newItemStack.getAmount() > 0) {
+                        carrying = newItemStack;
+                    } else {
+                        carrying = null;
+                    }
                 }
 
                 @Override
@@ -203,7 +200,11 @@ public class Boi {
 
             eligibleProducers.sort(
                     Comparator.comparing(ItemProducerComponent::getPriority)
-                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(house.getEntity())));
+//                            .thenComparing(Comparator.<ItemProducerComponent, Integer>comparing(p -> Math.min(p.getBiggestStack().getAmount(), MAX_CARRY)).reversed())
+                            .thenComparing(Comparator.<ItemProducerComponent, Boolean>comparing(itemProducerComponent -> itemProducerComponent.hasFullOutput()).reversed())
+
+                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(boiEntity)));
+//                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(house.getEntity())));
 
 
             return Optional.of(eligibleProducers.get(0));

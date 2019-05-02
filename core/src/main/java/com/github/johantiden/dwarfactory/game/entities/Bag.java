@@ -84,4 +84,24 @@ public class Bag {
 
         return new ImmutableArray<>(array);
     }
+
+    public ImmutableItemStack getBiggestStack() {
+        ItemStack biggest = stacks.values().next();
+        for (ItemStack itemStack : stacks.values()) {
+            if (itemStack.getAmount() > biggest.getAmount()) {
+                biggest = itemStack;
+            }
+        }
+        return biggest.snapshot();
+    }
+
+    public boolean isEmpty() {
+        for (ItemStack itemStack : stacks.values()) {
+            if (itemStack.getAmount() > 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

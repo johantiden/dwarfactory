@@ -186,9 +186,9 @@ public class RenderForegroundSystem extends EntitySystem {
 
 //        debugDrawCoordinateLines();
 //        debugDrawBoundingBoxes();
-        debugDrawSpeed();
-        debugDrawForces();
-        debugDrawAcceleration();
+//        debugDrawSpeed();
+//        debugDrawForces();
+//        debugDrawAcceleration();
 
         debugShapeRenderer.end();
     }

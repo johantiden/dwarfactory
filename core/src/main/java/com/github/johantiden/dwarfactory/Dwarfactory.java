@@ -89,9 +89,15 @@ public class Dwarfactory extends ApplicationAdapter {
         Factory.createFactory(new TileCoordinate(3,13), engine, 0.9f, Recipies.APPLE_GARDEN);
 
         House.createHouse(new TileCoordinate(6,7), engine, 1);
+        House.createHouse(new TileCoordinate(6,8), engine, 1);
 
         Factory.createFactory(new TileCoordinate(7,4), engine, 0, Recipies.APPLE_JUICER);
         Factory.createFactory(new TileCoordinate(7,1), engine, 0, Recipies.APPLE_JUICER);
+
+        House.createHouse(new TileCoordinate(10,3), engine, 1);
+        House.createHouse(new TileCoordinate(10,4), engine, 1);
+
+        Factory.createFactory(new TileCoordinate(17, 1), engine, 0, Recipies.SELL_APPLE_JUICE);
     }
 
     public static void log(String string) {
