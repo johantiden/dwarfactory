@@ -10,7 +10,7 @@ public class Recipies {
     public static final Recipe APPLE_GARDEN = new Recipe(
             Collections.emptyList(),
             newArrayList(new ImmutableItemStack(ItemType.APPLE, 1)),
-            10
+            2
     );
 
     public static final Recipe APPLE_JUICER = new Recipe(

@@ -9,6 +9,7 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.utils.Array;
 import com.github.johantiden.dwarfactory.components.ControlComponent;
 import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
+import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
 import com.github.johantiden.dwarfactory.game.entities.SelectJobContext;
 import com.github.johantiden.dwarfactory.util.JLists;
 
@@ -16,14 +17,17 @@ public class ControlSystem extends EntitySystem {
 
     private final ComponentMapper<ControlComponent> controlMapper = ComponentMapper.getFor(ControlComponent.class);
     private final ComponentMapper<ItemConsumerComponent> itemConsumerMapper = ComponentMapper.getFor(ItemConsumerComponent.class);
+    private final ComponentMapper<ItemProducerComponent> itemProducerMapper = ComponentMapper.getFor(ItemProducerComponent.class);
 
     private ImmutableArray<Entity> entities;
     private ImmutableArray<Entity> itemConsumers;
+    private ImmutableArray<Entity> itemProducers;
 
     @Override
     public void addedToEngine(Engine engine) {
         entities = engine.getEntitiesFor(Family.all(ControlComponent.class).get());
         itemConsumers = engine.getEntitiesFor(Family.all(ItemConsumerComponent.class).get());
+        itemProducers = engine.getEntitiesFor(Family.all(ItemProducerComponent.class).get());
     }
 
     @Override
@@ -50,7 +54,8 @@ public class ControlSystem extends EntitySystem {
             }
             if (!control.hasJob()) {
                 ImmutableArray<ItemConsumerComponent> itemConsumerComponents = JLists.map(itemConsumerMapper::get, itemConsumers);
-                control.trySelectNewJob(new SelectJobContext(itemConsumerComponents));
+                ImmutableArray<ItemProducerComponent> allItemProducers = JLists.map(itemProducerMapper::get, itemProducers);
+                control.trySelectNewJob(new SelectJobContext(itemConsumerComponents, allItemProducers));
             }
         }
     }

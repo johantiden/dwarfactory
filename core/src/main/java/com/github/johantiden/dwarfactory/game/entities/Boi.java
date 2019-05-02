@@ -9,18 +9,19 @@ import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.ControlComponent;
 import com.github.johantiden.dwarfactory.components.ForceContext;
 import com.github.johantiden.dwarfactory.components.ForcesComponent;
-import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
 import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
+import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
 import com.github.johantiden.dwarfactory.components.Job;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.assets.Assets;
+import com.github.johantiden.dwarfactory.game.entities.factory.House;
 import com.github.johantiden.dwarfactory.systems.physics.DragForce;
 import com.github.johantiden.dwarfactory.util.JLists;
 
-import java.security.SecureRandom;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,28 +33,30 @@ import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 public class Boi {
     public static final int RANGE_SQUARED = TILE_SIZE*TILE_SIZE/2/2;
 
-    private static final int MAX_CARRY = 2;
+    private static final int MAX_CARRY = 5;
     public static final int SIZE = 32;
-    public static final SecureRandom RANDOM = new SecureRandom();
+    public static final int MAX_SPEED = 200;
+    public static final float MOVE_FORCE = 1000;
 
-    private final Entity entity;
+    private final Entity boiEntity;
+    private final House house;
     private ItemStack carrying = null;
 
-    private final ItemProducerComponent sourceHack;
     private final ComponentMapper<PositionComponent> positionMapper = ComponentMapper.getFor(PositionComponent.class);
+    private final ComponentMapper<ItemConsumerComponent> itemConsumerMapper = ComponentMapper.getFor(ItemConsumerComponent.class);
 
-    public Boi(Entity entity, ItemProducerComponent sourceHack) {
-        this.entity = entity;
-        this.sourceHack = sourceHack;
+    public Boi(Entity boiEntity, House house) {
+        this.boiEntity = boiEntity;
+        this.house = house;
     }
 
-    public static void createBoi(float x, float y, float speedX, float speedY, PooledEngine engine, ItemProducerComponent sourceHack) {
+    public static void createBoi(float x, float y, float speedX, float speedY, PooledEngine engine, House house) {
 
         Entity entity = engine.createEntity();
-        Boi boi = new Boi(entity, sourceHack);
+        Boi boi = new Boi(entity, house);
 
         entity.add(new PositionComponent(x, y));
-        entity.add(new SpeedComponent(speedX, speedY, 100));
+        entity.add(new SpeedComponent(speedX, speedY, MAX_SPEED));
         entity.add(new AccelerationComponent(0, 0));
         ControlComponent control = new ControlComponent(boi::selectNewJob);
         entity.add(control);
@@ -85,31 +88,79 @@ public class Boi {
         private final SelectJobContext selectJobContext;
 
         public MyJobSelector(SelectJobContext selectJobContext) {
-
             this.selectJobContext = selectJobContext;
         }
 
         @Override
         public Job get() {
             if (carrying != null) {
-                Optional<ItemConsumerComponent> maybeNewReceiver = chooseTarget(selectJobContext);
-                return maybeNewReceiver
+                Optional<ItemConsumerComponent> maybeNewConsumer = chooseTarget(selectJobContext);
+                return maybeNewConsumer
                         .map(this::deliveryJob)
                         .orElseGet(() -> {
                             // no one wants my stuff :( go home and wait
-                            if (!isHome()) {
-                                return goHomeJob();
-                            } else {
-                                return waitJob();
-                            }
+                            return goHomeAndDropResourcesThenWait();
                         });
 
-            } else if (!isHome()){
-                return goHomeJob();
             } else {
-                return pickupJob();
+                Optional<ItemProducerComponent> maybeNewProducer = chooseSource(selectJobContext);
+                return maybeNewProducer
+                        .map(this::pickupJob)
+                        .orElseGet(() -> {
+                            // nothing to pick up.
+                            return goHomeAndDropResourcesThenWait();
+                        });
             }
         }
+
+        private Job pickupJob(ItemProducerComponent source) {
+            return new Job() {
+
+                @Override
+                public void finish() {
+                    source.getAvailableOutput()
+                            .findAny()
+                            .ifPresent(outputStack -> {
+                                ItemStack newItemStack = source.output(outputStack.itemType, MAX_CARRY);
+                                if (newItemStack.getAmount() > 0) {
+                                    carrying = newItemStack;
+                                } else {
+                                    carrying = null;
+                                }
+                            });
+                }
+
+                @Override
+                public boolean canFinishJob() {
+                    boolean isInRange = isInRange(source.hack_getEntity());
+                    return isInRange && !source.getAvailableOutput().isEmpty();
+                }
+
+                @Override
+                public Vector2 getWantedAcceleration(ForceContext forceContext) {
+                    return getAccelerationTowards(getPosition(source.hack_getEntity()), getPosition(boiEntity));
+                }
+
+                @Override
+                public boolean isJobFailed() {
+                    boolean isInRange = isInRange(source.hack_getEntity());
+                    return !isInRange;
+                }
+            };
+        }
+
+        private Job goHomeAndDropResourcesThenWait() {
+            if (carrying != null) {
+                return deliveryJob(getHomeConsumer());
+            }
+
+            if (!isHome()) {
+                return goHomeJob();
+            }
+
+            return waitJob();
+        }
+
 
         private Job waitJob() {
             return new Job() {
@@ -133,44 +184,39 @@ public class Boi {
             if (eligibleReceivers.isEmpty()) {
                 return Optional.empty();
             }
-            ItemConsumerComponent receiver = eligibleReceivers.get(RANDOM.nextInt(eligibleReceivers.size()));
-            return Optional.of(receiver);
+
+            eligibleReceivers.sort(
+                    Comparator.comparing(ItemConsumerComponent::getPriority)
+                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(house.getEntity())));
+
+            return Optional.of(eligibleReceivers.get(0));
         }
 
-        private Job pickupJob() {
-            return new Job() {
+        private Optional<ItemProducerComponent> chooseSource(SelectJobContext selectJobContext) {
+            List<ItemProducerComponent> eligibleProducers = JLists.stream(selectJobContext.allItemProducers)
+                    .filter(itemProducer -> !itemProducer.getAvailableOutput().isEmpty())
+                    .collect(Collectors.toList());
 
-                @Override
-                public void finish() {
-                    sourceHack.getAvailableOutput().stream()
-                            .findAny()
-                            .ifPresent(outputStack -> {
-                                ItemStack newItemStack = sourceHack.drain(outputStack.itemType, MAX_CARRY);
-                                if (newItemStack.getAmount() > 0) {
-                                    carrying = newItemStack;
-                                } else {
-                                    carrying = null;
-                                }
-                            });
+            if (eligibleProducers.isEmpty()) {
+                return Optional.empty();
+            }
 
-                }
+            eligibleProducers.sort(
+                    Comparator.comparing(ItemProducerComponent::getPriority)
+                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(house.getEntity())));
 
-                @Override
-                public Vector2 getWantedAcceleration(ForceContext forceContext) {
-                    return brake(forceContext);
-                }
 
-                @Override
-                public boolean canFinishJob() {
-                    boolean isInRange = isInRange(Boi.this.sourceHack.hack_getEntity());
-                    return isInRange && !sourceHack.getAvailableOutput().isEmpty();
-                }
+            return Optional.of(eligibleProducers.get(0));
+        }
 
-                @Override
-                public boolean isJobFailed() {
-                    boolean isInRange = isInRange(Boi.this.sourceHack.hack_getEntity());
-                    return !isInRange;
-                }
+
+        private Comparator<PositionComponent> sortByProximityTo(Entity homeEntity) {
+            return (a, b) -> {
+                PositionComponent homePosition = getPosition(homeEntity);
+                return Float.compare(
+                        homePosition.cpy().sub(a).len(),
+                        homePosition.cpy().sub(b).len()
+                        );
             };
         }
 
@@ -180,7 +226,7 @@ public class Boi {
         }
 
         private boolean isInRange(Entity target) {
-            float distanceSquared = getDistanceSquared(target, Boi.this.entity);
+            float distanceSquared = getDistanceSquared(target, Boi.this.boiEntity);
             return distanceSquared < RANGE_SQUARED;
         }
 
@@ -190,12 +236,12 @@ public class Boi {
 
                 @Override
                 public boolean canFinishJob() {
-                    return isInRange(sourceHack.hack_getEntity());
+                    return isInRange(house.getEntity());
                 }
 
                 @Override
                 public Vector2 getWantedAcceleration(ForceContext forceContext) {
-                    return getAccelerationTowards(getPosition(sourceHack.hack_getEntity()), getPosition(entity));
+                    return getAccelerationTowards(getPosition(house.getEntity()), getPosition(boiEntity));
                 }
 
                 @Override
@@ -206,10 +252,11 @@ public class Boi {
         }
 
         private boolean isHome() {
-            return isInRange(sourceHack.hack_getEntity());
+            return isInRange(house.getEntity());
         }
 
         private Job deliveryJob(ItemConsumerComponent target) {
+            Objects.requireNonNull(target);
             return new Job() {
 
                 @Override
@@ -219,13 +266,15 @@ public class Boi {
 
                 @Override
                 public Vector2 getWantedAcceleration(ForceContext forceContext) {
-                    return getAccelerationTowards(getPosition(target.hack_getEntity()), getPosition(entity));
+                    return getAccelerationTowards(getPosition(target.hack_getEntity()), getPosition(boiEntity));
                 }
 
                 @Override
                 public void finish() {
-                    target.accept(carrying);
-                    carrying = null;
+                    target.input(carrying);
+                    if (carrying.getAmount() == 0) {
+                        carrying = null;
+                    }
                 }
             };
         }
@@ -245,6 +294,10 @@ public class Boi {
         return positionMapper.get(entity);
     }
 
+    private ItemConsumerComponent getHomeConsumer() {
+        return itemConsumerMapper.get(house.getEntity());
+    }
+
     private static Vector2 getAccelerationTowards(PositionComponent target, PositionComponent position) {
         Objects.requireNonNull(target);
         Objects.requireNonNull(position);
@@ -253,7 +306,6 @@ public class Boi {
                 .sub(position)
                 .setLength(1);
 
-        float accelerationFactor = 100;
-        return targetDirectionVector.scl(accelerationFactor);
+        return targetDirectionVector.scl(MOVE_FORCE);
     }
 }

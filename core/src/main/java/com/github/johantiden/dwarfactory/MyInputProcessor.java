@@ -2,7 +2,7 @@ package com.github.johantiden.dwarfactory;
 
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
+import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 
 import java.util.function.Consumer;
 

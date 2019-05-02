@@ -25,29 +25,7 @@ public class StringOverlayVisual {
                     @Override
                     public void renderSprites(SpriteBatch screenBatch, RenderContext renderContext) {
                         valueSupplier.get()
-                                .ifPresent(string ->{
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(-WHITE_SHADOW_OFFSET, -WHITE_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(WHITE_SHADOW_OFFSET, -WHITE_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(-WHITE_SHADOW_OFFSET, WHITE_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(WHITE_SHADOW_OFFSET, WHITE_SHADOW_OFFSET));
-
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(-WHITE_SHADOW_OFFSET, 0));
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(WHITE_SHADOW_OFFSET, 0));
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(0, WHITE_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, WHITE_SHADOW_COLOR, offset.cpy().add(0, WHITE_SHADOW_OFFSET));
-
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(-BLACK_SHADOW_OFFSET, -BLACK_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(BLACK_SHADOW_OFFSET, -BLACK_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(-BLACK_SHADOW_OFFSET, BLACK_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(BLACK_SHADOW_OFFSET, BLACK_SHADOW_OFFSET));
-
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(-BLACK_SHADOW_OFFSET, 0));
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(BLACK_SHADOW_OFFSET, 0));
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(0, BLACK_SHADOW_OFFSET));
-                                    draw(screenBatch, renderContext, string, font, BLACK_SHADOW_COLOR, offset.cpy().add(0, BLACK_SHADOW_OFFSET));
-
-                                    draw(screenBatch, renderContext, string, font, color, offset);
-                                });
+                                .ifPresent(string -> draw(screenBatch, renderContext, string, font, color, offset));
                     }
                 });
     }

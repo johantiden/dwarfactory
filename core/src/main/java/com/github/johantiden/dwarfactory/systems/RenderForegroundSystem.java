@@ -9,33 +9,43 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.ForceContext;
 import com.github.johantiden.dwarfactory.components.ForcesComponent;
+import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
+import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.TaskComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
-import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
+import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
+import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
+import com.github.johantiden.dwarfactory.util.FontUtil;
 
 import java.util.List;
 
 public class RenderForegroundSystem extends EntitySystem {
     private static final boolean DRAW_DEBUG = true;
+    public static final int FONT_SIZE = 32;
     private ImmutableVector2Int mouseScreenCoordinates;
     private final Texture mouseTileTexture;
 
     private ImmutableArray<Entity> entitites;
 
+    private final BitmapFont font = FontUtil.getFont(FONT_SIZE);
+    private final BitmapFont fontLarger = FontUtil.getFont((int) (FONT_SIZE*1.1));
+
     private final SpriteBatch spriteBatch;
     private final SpriteBatch unprojectedSpriteBatch;
     private final ShapeRenderer shapeRenderer;
     private final ShapeRenderer debugShapeRenderer;
+    private final SpriteBatch debugSpriteBatch;
 
     private final Camera camera;
 
@@ -46,14 +56,17 @@ public class RenderForegroundSystem extends EntitySystem {
     private final ComponentMapper<SizeComponent> sizeManager = ComponentMapper.getFor(SizeComponent.class);
     private final ComponentMapper<AccelerationComponent> accelerationManager = ComponentMapper.getFor(AccelerationComponent.class);
     private final ComponentMapper<ForcesComponent> forcesManager = ComponentMapper.getFor(ForcesComponent.class);
+    private final ComponentMapper<ItemProducerComponent> itemProducerManager = ComponentMapper.getFor(ItemProducerComponent.class);
+    private final ComponentMapper<ItemConsumerComponent> itemConsumerManger = ComponentMapper.getFor(ItemConsumerComponent.class);
 
     public RenderForegroundSystem(Camera camera) {
         this.spriteBatch = new SpriteBatch();
-        unprojectedSpriteBatch = new SpriteBatch();
+        this.debugSpriteBatch = new SpriteBatch();
+        this.unprojectedSpriteBatch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer(100);
         this.debugShapeRenderer = new ShapeRenderer(100);
         this.camera = camera;
-        mouseTileTexture = new Texture(Gdx.files.internal("selection_overlay.png"), true);
+        this.mouseTileTexture = new Texture(Gdx.files.internal("selection_overlay.png"), true);
     }
 
     public void onMouseMoved(ImmutableVector2Int screenCoordinates) {
@@ -158,7 +171,6 @@ public class RenderForegroundSystem extends EntitySystem {
 
             visual.debugRenderShapes(debugShapeRenderer, new RenderContext(speed, position, size, task));
         }
-
     }
 
 
@@ -169,14 +181,62 @@ public class RenderForegroundSystem extends EntitySystem {
         debugShapeRenderer.begin();
 
         debugRenderEntities();
+        debugRenderItemInput();
+        debugRenderItemOutput();
 
-        debugDrawCoordinateLines();
+//        debugDrawCoordinateLines();
 //        debugDrawBoundingBoxes();
         debugDrawSpeed();
         debugDrawForces();
         debugDrawAcceleration();
 
         debugShapeRenderer.end();
+    }
+
+    private void debugRenderItemInput() {
+        debugSpriteBatch.setProjectionMatrix(camera.combined);
+        debugSpriteBatch.begin();
+        font.setColor(1, 0, 0, 1);
+        fontLarger.setColor(0, 0, 0, 1);
+
+        for (Entity entity : entitites) {
+            if (positionManager.has(entity) &&
+                    sizeManager.has(entity) &&
+                    itemConsumerManger.has(entity)) {
+                PositionComponent position = positionManager.get(entity);
+                SizeComponent size = sizeManager.get(entity);
+                ItemConsumerComponent itemConsumer = itemConsumerManger.get(entity);
+
+                String s = Factory.stacksToString(itemConsumer.getBag().snapshotStacks());
+                fontLarger.draw(debugSpriteBatch, s, position.x - size.x/2, position.y - size.y/2);
+                font.draw(debugSpriteBatch, s, position.x - size.x/2, position.y - size.y/2);
+            }
+        }
+
+        debugSpriteBatch.end();
+    }
+
+    private void debugRenderItemOutput() {
+        debugSpriteBatch.setProjectionMatrix(camera.combined);
+        debugSpriteBatch.begin();
+        font.setColor(0, 1, 0, 1);
+        fontLarger.setColor(0, 0, 0, 1);
+
+        for (Entity entity : entitites) {
+            if (positionManager.has(entity) &&
+                    sizeManager.has(entity) &&
+                    itemProducerManager.has(entity)) {
+                PositionComponent position = positionManager.get(entity);
+                SizeComponent size = sizeManager.get(entity);
+                ItemProducerComponent itemProducerComponent = itemProducerManager.get(entity);
+
+                String s = Factory.stacksToString(itemProducerComponent.getBag().snapshotStacks());
+                fontLarger.draw(debugSpriteBatch, s, position.x, position.y - size.y/2);
+                font.draw(debugSpriteBatch, s, position.x, position.y - size.y/2);
+            }
+        }
+
+        debugSpriteBatch.end();
     }
 
     private void debugDrawSpeed() {
@@ -196,6 +256,7 @@ public class RenderForegroundSystem extends EntitySystem {
             }
         }
     }
+
     private void debugDrawAcceleration() {
         debugShapeRenderer.setColor(0, 1, 0, 1);
         debugShapeRenderer.set(ShapeRenderer.ShapeType.Line);

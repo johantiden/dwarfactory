@@ -1,4 +1,4 @@
-package com.github.johantiden.dwarfactory.math;
+package com.github.johantiden.dwarfactory.struct;
 
 public class ImmutableVector2 {
     public final float x;

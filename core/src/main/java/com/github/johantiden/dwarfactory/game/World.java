@@ -3,7 +3,7 @@ package com.github.johantiden.dwarfactory.game;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.github.johantiden.dwarfactory.game.assets.Assets;
-import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.struct.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import java.util.HashMap;

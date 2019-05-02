@@ -4,16 +4,21 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
-import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.struct.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.util.TextureUtil;
 
 public class Assets {
     public static final TextureRegion FACTORY = new TextureRegion(
-            TextureUtil.loadTextureWithMipMap("buildings.png"),
+            TextureUtil.loadTextureWithMipMap("buildings_transparency.png"),
             0, 1304, 128, 128);
+    public static final TextureRegion HOUSE = new TextureRegion(
+            TextureUtil.loadTextureWithMipMap("buildings_transparency.png"),
+            416, 208, 96, 96);
 
     public static final TextureRegion BOX = new TextureRegion(
             TextureUtil.loadTextureWithMipMap("crate.jpg"));
+
+    public static final float TILE_BUILDING_INSET = 5f;
 
     private static TextureRegion getRegion(Texture spriteSheet, ImmutableRectangleInt rectangle) {
         return new TextureRegion(spriteSheet, rectangle.x, rectangle.y, rectangle.width, rectangle.height);

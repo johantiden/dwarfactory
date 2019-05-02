@@ -12,8 +12,9 @@ import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.World;
 import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
+import com.github.johantiden.dwarfactory.game.entities.factory.House;
 import com.github.johantiden.dwarfactory.game.entities.factory.Recipies;
-import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
+import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.ControlSystem;
 import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
@@ -83,12 +84,14 @@ public class Dwarfactory extends ApplicationAdapter {
     }
 
     private void createGameEntities() {
-        Factory.createFactory(new TileCoordinate(3,7), engine, 12, 4, Recipies.APPLE_GARDEN, 1);
-        Factory.createFactory(new TileCoordinate(3,8), engine, 12, 4, Recipies.APPLE_GARDEN, 1);
-        Factory.createFactory(new TileCoordinate(3,9), engine, 12, 4, Recipies.APPLE_GARDEN, 1);
+        Factory.createFactory(new TileCoordinate(3,7), engine, 0.1f, Recipies.APPLE_GARDEN);
+        Factory.createFactory(new TileCoordinate(3,10), engine, 0.5f, Recipies.APPLE_GARDEN);
+        Factory.createFactory(new TileCoordinate(3,13), engine, 0.9f, Recipies.APPLE_GARDEN);
 
-        Factory.createFactory(new TileCoordinate(7,4), engine, 2, 4, Recipies.APPLE_JUICER, 0);
-        Factory.createFactory(new TileCoordinate(7,2), engine, 2, 4, Recipies.APPLE_JUICER, 0);
+        House.createHouse(new TileCoordinate(6,7), engine, 1);
+
+        Factory.createFactory(new TileCoordinate(7,4), engine, 0, Recipies.APPLE_JUICER);
+        Factory.createFactory(new TileCoordinate(7,1), engine, 0, Recipies.APPLE_JUICER);
     }
 
     public static void log(String string) {

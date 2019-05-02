@@ -5,9 +5,9 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
-import com.github.johantiden.dwarfactory.math.ImmutableRectangleInt;
-import com.github.johantiden.dwarfactory.math.ImmutableVector2;
-import com.github.johantiden.dwarfactory.math.ImmutableVector2Int;
+import com.github.johantiden.dwarfactory.struct.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.struct.ImmutableVector2;
+import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 

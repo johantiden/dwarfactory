@@ -13,8 +13,9 @@ public class TaskComponent implements Component {
 
     private float timeSpent;
 
-    public TaskComponent(float totalTaskTime, Consumer<TaskContext> finishCallback, Predicate<TaskContext> canRun) {
+    public TaskComponent(float totalTaskTime, float initialProgress, Consumer<TaskContext> finishCallback, Predicate<TaskContext> canRun) {
         this.totalTaskTime = totalTaskTime;
+        timeSpent += initialProgress*totalTaskTime;
         this.finishCallback = finishCallback;
         this.canRun = canRun;
     }

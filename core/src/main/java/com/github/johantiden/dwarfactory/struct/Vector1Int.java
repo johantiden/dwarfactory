@@ -1,4 +1,4 @@
-package com.github.johantiden.dwarfactory.math;
+package com.github.johantiden.dwarfactory.struct;
 
 public class Vector1Int {
     public int value;
