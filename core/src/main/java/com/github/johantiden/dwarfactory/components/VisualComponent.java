@@ -9,6 +9,7 @@ import com.github.johantiden.dwarfactory.game.entities.EntityRenderer;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
 
 import java.util.Arrays;
+import java.util.List;
 
 public final class VisualComponent implements Component {
 
@@ -55,6 +56,8 @@ public final class VisualComponent implements Component {
         });
     }
 
+
+
     public static VisualComponent create4Angles(
             TextureRegion down,
             TextureRegion up,
@@ -64,7 +67,7 @@ public final class VisualComponent implements Component {
                 new EntityRenderer() {
                     @Override
                     public void renderSprites(SpriteBatch spriteBatch, RenderContext renderContext) {
-                        TextureRegion textureRegion = chooseTextureFromAngle(renderContext.speed,
+                        TextureRegion textureRegion = chooseTextureFromAngle4(renderContext.speed,
                                 down, up, left, right);
                         drawSimple(spriteBatch, renderContext, textureRegion);
                     }
@@ -72,7 +75,28 @@ public final class VisualComponent implements Component {
         );
     }
 
-    public static TextureRegion chooseTextureFromAngle(
+    public static VisualComponent create2AnglesAnimated(
+            List<TextureRegion> left,
+            List<TextureRegion> right) {
+        long millisPerFrame = 20;
+
+        return new VisualComponent(
+
+                new EntityRenderer() {
+                    @Override
+                    public void renderSprites(SpriteBatch spriteBatch, RenderContext renderContext) {
+                        long currentTimeMillis = System.currentTimeMillis();
+                        int index = (int) (currentTimeMillis/millisPerFrame % left.size());
+
+                        TextureRegion textureRegion = chooseTextureFromAngleLeftRight(renderContext.speed,
+                                left.get(index), right.get(index));
+                        drawSimple(spriteBatch, renderContext, textureRegion);
+                    }
+                }
+        );
+    }
+
+    public static TextureRegion chooseTextureFromAngle4(
             Vector2 vector,
             TextureRegion down,
             TextureRegion up,
@@ -89,6 +113,20 @@ public final class VisualComponent implements Component {
         }
 
         if (angle >= 135 && angle <= 225) {
+            return left;
+        }
+
+        return right;
+
+    }
+
+    public static TextureRegion chooseTextureFromAngleLeftRight(
+            Vector2 vector,
+            TextureRegion left,
+            TextureRegion right) {
+        double angle = vector.angle();
+
+        if (angle >= 90 && angle <= 270) {
             return left;
         }
 

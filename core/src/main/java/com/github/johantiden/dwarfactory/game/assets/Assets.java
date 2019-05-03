@@ -5,7 +5,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 import com.github.johantiden.dwarfactory.struct.ImmutableRectangleInt;
+import com.github.johantiden.dwarfactory.util.JLists;
 import com.github.johantiden.dwarfactory.util.TextureUtil;
+
+import java.util.List;
 
 public class Assets {
     public static final TextureRegion FACTORY = new TextureRegion(
@@ -25,12 +28,25 @@ public class Assets {
     }
 
     public static class Boi {
-        private static final Texture boiSpriteSheet = TextureUtil.loadTextureWithMipMap("simple_10x10_character.png");
 
-        public static final TextureRegion UP = getRegion(boiSpriteSheet, new ImmutableRectangleInt(10, 20, 10, 10));
-        public static final TextureRegion DOWN = getRegion(boiSpriteSheet, new ImmutableRectangleInt(10, 0, 10, 10));
-        public static final TextureRegion LEFT = getRegion(boiSpriteSheet, new ImmutableRectangleInt(20, 10, -10, 10));
-        public static final TextureRegion RIGHT = getRegion(boiSpriteSheet, new ImmutableRectangleInt(10, 10, 10, 10));
+        //        public static final TextureRegion UP = getRegion(boiSpriteSheet, new ImmutableRectangleInt(10, 20, 10, 10));
+//        public static final TextureRegion DOWN = getRegion(boiSpriteSheet, new ImmutableRectangleInt(10, 0, 10, 10));
+//        public static final TextureRegion LEFT = getRegion(boiSpriteSheet, new ImmutableRectangleInt(20, 10, -10, 10));
+//        public static final TextureRegion RIGHT = getRegion(boiSpriteSheet, new ImmutableRectangleInt(10, 10, 10, 10));
+        public static final TextureRegion UP = new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (1).png"));
+        public static final TextureRegion DOWN = new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (1).png"));
+        public static final List<TextureRegion> LEFT = JLists.newArrayList(
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (1).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (2).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (3).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (4).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (5).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (6).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (7).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (8).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (9).png")),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (10).png")));
+        public static final List<TextureRegion> RIGHT = LEFT;
     }
 
 

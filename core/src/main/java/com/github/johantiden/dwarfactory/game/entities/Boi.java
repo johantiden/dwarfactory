@@ -22,7 +22,7 @@ public class Boi {
     public static final int RANGE_SQUARED = 100;
 
     static final int MAX_CARRY = 5;
-    public static final int SIZE = 32;
+    public static final int SIZE = 50;
     public static final int MAX_SPEED = 100;
 
     final Entity boiEntity;
@@ -46,9 +46,7 @@ public class Boi {
         ControlComponent control = new ControlComponent(boi::selectNewJob);
         entity.add(control);
 
-        VisualComponent mainVisual = VisualComponent.create4Angles(
-                Assets.Boi.DOWN,
-                Assets.Boi.UP,
+        VisualComponent mainVisual = VisualComponent.create2AnglesAnimated(
                 Assets.Boi.LEFT,
                 Assets.Boi.RIGHT);
         VisualComponent carryVisual = StringOverlayVisual.create(new Color(1,0,0,1), SIZE, new Vector2(SIZE*2/5, -SIZE*2/5), () -> boi.tryGetCarrying().map(carrying -> String.valueOf(carrying.getAmount())));
