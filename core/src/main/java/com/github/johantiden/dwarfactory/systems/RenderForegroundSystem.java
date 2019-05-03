@@ -14,10 +14,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
+import com.github.johantiden.dwarfactory.components.ControlComponent;
 import com.github.johantiden.dwarfactory.components.ForceContext;
 import com.github.johantiden.dwarfactory.components.ForcesComponent;
 import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
 import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
+import com.github.johantiden.dwarfactory.components.Job;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
@@ -29,6 +31,7 @@ import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.FontUtil;
 
 import java.util.List;
+import java.util.Optional;
 
 public class RenderForegroundSystem extends EntitySystem {
     private static final boolean DRAW_DEBUG = true;
@@ -51,6 +54,7 @@ public class RenderForegroundSystem extends EntitySystem {
 
     private final ComponentMapper<PositionComponent> positionManager = ComponentMapper.getFor(PositionComponent.class);
     private final ComponentMapper<SpeedComponent> speedManager = ComponentMapper.getFor(SpeedComponent.class);
+    private final ComponentMapper<ControlComponent> controlManager = ComponentMapper.getFor(ControlComponent.class);
     private final ComponentMapper<TaskComponent> taskManager = ComponentMapper.getFor(TaskComponent.class);
     private final ComponentMapper<VisualComponent> visualManager = ComponentMapper.getFor(VisualComponent.class);
     private final ComponentMapper<SizeComponent> sizeManager = ComponentMapper.getFor(SizeComponent.class);
@@ -183,6 +187,7 @@ public class RenderForegroundSystem extends EntitySystem {
         debugRenderEntities();
         debugRenderItemInput();
         debugRenderItemOutput();
+        debugRenderJobs();
 
 //        debugDrawCoordinateLines();
 //        debugDrawBoundingBoxes();
@@ -191,6 +196,30 @@ public class RenderForegroundSystem extends EntitySystem {
 //        debugDrawAcceleration();
 
         debugShapeRenderer.end();
+    }
+
+    private void debugRenderJobs() {
+        debugShapeRenderer.setColor(0, 0, 1, 1);
+        debugShapeRenderer.set(ShapeRenderer.ShapeType.Line);
+
+        for (Entity entity : entitites) {
+            if (controlManager.has(entity) && positionManager.has(entity)) {
+                ControlComponent controlComponent = controlManager.get(entity);
+                PositionComponent position = positionManager.get(entity);
+
+                Vector2 sourcePosition = position;
+                for (Job job : controlComponent.getJobQueue()) {
+                    Optional<Vector2> targetPosition = job.getTargetPosition();
+                    if (targetPosition.isPresent()) {
+                        debugShapeRenderer.line(
+                                sourcePosition.x, sourcePosition.y,
+                                targetPosition.get().x, targetPosition.get().y
+                        );
+                        sourcePosition = targetPosition.get();
+                    }
+                }
+            }
+        }
     }
 
     private void debugRenderItemInput() {
@@ -248,7 +277,7 @@ public class RenderForegroundSystem extends EntitySystem {
                 PositionComponent position = positionManager.get(entity);
                 SpeedComponent speed = speedManager.get(entity);
 
-                Vector2 point = position.cpy().add(speed.cpy().scl(1));
+                Vector2 point = position.cpy().add(speed.cpy());
                 debugShapeRenderer.line(
                         position.x, position.y,
                         point.x, point.y
@@ -266,7 +295,7 @@ public class RenderForegroundSystem extends EntitySystem {
                 PositionComponent position = positionManager.get(entity);
                 AccelerationComponent acceleration = accelerationManager.get(entity);
 
-                Vector2 point = position.cpy().add(acceleration.cpy().scl(1));
+                Vector2 point = position.cpy().add(acceleration.cpy());
                 debugShapeRenderer.line(
                         position.x, position.y,
                         point.x, point.y
@@ -287,7 +316,7 @@ public class RenderForegroundSystem extends EntitySystem {
 
                 List<Vector2> forcesList = forces.getForces(new ForceContext(speed));
                 for (Vector2 force : forcesList) {
-                    Vector2 point = position.cpy().add(force.cpy().scl(1));
+                    Vector2 point = position.cpy().add(force.cpy());
                     debugShapeRenderer.line(
                             position.x, position.y,
                             point.x, point.y

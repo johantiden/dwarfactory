@@ -2,6 +2,8 @@ package com.github.johantiden.dwarfactory.components;
 
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.Optional;
+
 public interface Job {
 
     boolean canFinishJob();
@@ -15,4 +17,6 @@ public interface Job {
     }
     default void fail() {
     }
+
+    Optional<Vector2> getTargetPosition();
 }

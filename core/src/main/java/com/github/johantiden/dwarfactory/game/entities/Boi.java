@@ -15,12 +15,11 @@ import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.assets.Assets;
 import com.github.johantiden.dwarfactory.game.entities.factory.House;
 
+import java.util.Collection;
 import java.util.Optional;
 
-import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
-
 public class Boi {
-    public static final int RANGE_SQUARED = TILE_SIZE*TILE_SIZE/2/2;
+    public static final int RANGE_SQUARED = 100;
 
     static final int MAX_CARRY = 5;
     public static final int SIZE = 32;
@@ -58,7 +57,7 @@ public class Boi {
         engine.addEntity(entity);
     }
 
-    private Job selectNewJob(SelectJobContext selectJobContext) {
+    private Collection<Job> selectNewJob(SelectJobContext selectJobContext) {
         return new BoiJobSelector(selectJobContext, this).get();
     }
 

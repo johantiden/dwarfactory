@@ -3,6 +3,7 @@ package com.github.johantiden.dwarfactory.game.entities;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.math.Vector2;
+import com.github.czyzby.kiwi.util.tuple.immutable.Pair;
 import com.github.johantiden.dwarfactory.components.ForceContext;
 import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
 import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
@@ -12,19 +13,18 @@ import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
 import com.github.johantiden.dwarfactory.systems.RenderHudSystem;
 import com.github.johantiden.dwarfactory.util.JLists;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.github.johantiden.dwarfactory.game.entities.Boi.MAX_SPEED;
 
-public class BoiJobSelector implements Supplier<Job> {
+public class BoiJobSelector {
 
     private final SelectJobContext selectJobContext;
     private final Boi boi;
@@ -47,13 +47,12 @@ public class BoiJobSelector implements Supplier<Job> {
         return targetDirectionVector.scl(MAX_SPEED);
     }
 
-    @Override
-    public Job get() {
+    public Collection<Job> get() {
         if (boi.carrying != null) {
-            Optional<ItemConsumerComponent> maybeNewConsumer = chooseTarget(selectJobContext, false);
+            Optional<ItemConsumerComponent> maybeNewConsumer = chooseTarget(selectJobContext, boi.carrying.itemType, false);
             return maybeNewConsumer
                     .map(target -> {
-                        return (Job)new DeliveryJob(target);
+                        return JLists.newArrayList((Job)new DeliveryJob(target));
                     })
                     .orElseGet(() -> {
                         // no one wants my stuff :( go home and wait
@@ -61,9 +60,9 @@ public class BoiJobSelector implements Supplier<Job> {
                     });
 
         } else {
-            Optional<ItemProducerComponent> maybeNewProducer = chooseSource(selectJobContext);
+            Optional<Pair<ItemProducerComponent, ItemConsumerComponent>> maybeNewProducer = choosePickupAndDelivery(selectJobContext);
             return maybeNewProducer
-                    .map(source -> (Job)new PickupJob(source))
+                    .map(plan -> JLists.newArrayList(new PickupJob(plan.getFirst()), new DeliveryJob(plan.getSecond())))
                     .orElseGet(() -> {
                         // nothing to pick up.
                         return dropResourcesThenGoHomeAndWait();
@@ -75,21 +74,22 @@ public class BoiJobSelector implements Supplier<Job> {
         return positionMapper.get(entity);
     }
 
-    private Job dropResourcesThenGoHomeAndWait() {
+    private List<Job> dropResourcesThenGoHomeAndWait() {
         if (boi.carrying != null) {
-            Optional<ItemConsumerComponent> backupConsumer = chooseTarget(selectJobContext, true);
+            Optional<ItemConsumerComponent> backupConsumer = chooseTarget(selectJobContext, boi.carrying.itemType, true);
             if (backupConsumer.isPresent()) {
                 ItemConsumerComponent target = backupConsumer.get();
                 Objects.requireNonNull(target);
-                return new DeliveryJob(target);
+                return JLists.newArrayList(new DeliveryJob(target));
             }
         }
 
         if (!isHome()) {
-            return new GoHomeJob();
+            return JLists.newArrayList(new GoHomeJob(), waitJob());
+        } else {
+            return JLists.newArrayList(waitJob());
         }
 
-        return waitJob();
     }
 
 
@@ -104,14 +104,19 @@ public class BoiJobSelector implements Supplier<Job> {
             public Vector2 getWantedSpeed() {
                 return new Vector2(0, 0);
             }
+
+            @Override
+            public Optional<Vector2> getTargetPosition() {
+                return Optional.empty();
+            }
         };
     }
 
-    private Optional<ItemConsumerComponent> chooseTarget(SelectJobContext selectJobContext, boolean anyPriority) {
-        Predicate<ItemConsumerComponent> wants = itemConsumerComponent -> itemConsumerComponent.wants(boi.carrying.itemType);
-        Predicate<ItemConsumerComponent> filter = anyPriority ? consumer -> consumer.canFitSome(boi.carrying.itemType) : wants;
+    private Optional<ItemConsumerComponent> chooseTarget(SelectJobContext selectJobContext, ItemType itemType, boolean anyPriority) {
+        Predicate<ItemConsumerComponent> wants = itemConsumerComponent -> itemConsumerComponent.wants(itemType);
+        Predicate<ItemConsumerComponent> filter = anyPriority ? consumer -> consumer.canFitSome(itemType) : wants;
 
-        List<ItemConsumerComponent> eligibleReceivers = getFilteredConsumers(selectJobContext, filter);
+        List<ItemConsumerComponent> eligibleReceivers = getFilteredConsumers(selectJobContext.allItemConsumers, filter);
 
         if (eligibleReceivers.isEmpty()) {
             return Optional.empty();
@@ -125,9 +130,10 @@ public class BoiJobSelector implements Supplier<Job> {
         return Optional.of(eligibleReceivers.get(0));
     }
 
-    private Optional<ItemProducerComponent> chooseSource(SelectJobContext selectJobContext) {
+    private Optional<Pair<ItemProducerComponent, ItemConsumerComponent>> choosePickupAndDelivery(SelectJobContext selectJobContext) {
         List<ItemProducerComponent> eligibleProducers = JLists.stream(selectJobContext.allItemProducers)
                 .filter(itemProducer -> !itemProducer.getAvailableOutput().isEmpty())
+                .filter(anyoneWantsMyBiggestStack(selectJobContext, ItemConsumerComponent::wants))
                 .collect(Collectors.toList());
 
         if (eligibleProducers.isEmpty()) {
@@ -135,30 +141,31 @@ public class BoiJobSelector implements Supplier<Job> {
         }
 
         eligibleProducers.sort(
-                Comparator.comparing(anyoneWantsMyBiggestStack(selectJobContext, ItemConsumerComponent::wants)).reversed()
-                        .thenComparing(ItemProducerComponent::getPriority)
+                Comparator.comparing(ItemProducerComponent::getPriority)
 //                            .thenComparing(Comparator.<ItemProducerComponent, Integer>comparing(p -> Math.min(p.getBiggestStack().getAmount(), MAX_CARRY)).reversed())
 //                            .thenComparing(Comparator.<ItemProducerComponent, Boolean>comparing(ItemProducerComponent::hasFullOutput).reversed())
 
 //                            .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(boiEntity)));
                         .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(boi.house.getEntity())));
 
-
-        return Optional.of(eligibleProducers.get(0));
+        ItemProducerComponent itemProducerComponent = eligibleProducers.get(0);
+        ItemConsumerComponent itemConsumerComponent = chooseTarget(selectJobContext, itemProducerComponent.getBiggestStack().get().itemType, false)
+                .orElseThrow(() -> new IllegalStateException("No one wants my stack but we just filtered on that :("));
+        return Optional.of(new Pair<>(itemProducerComponent, itemConsumerComponent));
     }
 
-    private Function<ItemProducerComponent, Boolean> anyoneWantsMyBiggestStack(SelectJobContext selectJobContext, BiPredicate<ItemConsumerComponent, ItemType> predicate) {
+    private Predicate<ItemProducerComponent> anyoneWantsMyBiggestStack(SelectJobContext selectJobContext, BiPredicate<ItemConsumerComponent, ItemType> predicate) {
         return itemProducerComponent ->
                 itemProducerComponent.getBiggestStack()
                         .map(biggestStack -> {
-                            List<ItemConsumerComponent> eligibleReceivers = getFilteredConsumers(selectJobContext, itemConsumer -> predicate.test(itemConsumer, biggestStack.itemType));
+                            List<ItemConsumerComponent> eligibleReceivers = getFilteredConsumers(selectJobContext.allItemConsumers, itemConsumer -> predicate.test(itemConsumer, biggestStack.itemType));
                             return !eligibleReceivers.isEmpty();
                         })
                         .orElse(false);
     }
 
-    private List<ItemConsumerComponent> getFilteredConsumers(SelectJobContext selectJobContext, Predicate<ItemConsumerComponent> filter) {
-        return JLists.stream(selectJobContext.allItemConsumers)
+    public static List<ItemConsumerComponent> getFilteredConsumers(Iterable<ItemConsumerComponent> allItemConsumers, Predicate<ItemConsumerComponent> filter) {
+        return JLists.stream(allItemConsumers)
                 .filter(filter)
                 .collect(Collectors.toList());
     }
@@ -216,6 +223,11 @@ public class BoiJobSelector implements Supplier<Job> {
         }
 
         @Override
+        public Optional<Vector2> getTargetPosition() {
+            return Optional.of(getPosition(target.hack_getEntity()));
+        }
+
+        @Override
         public void finish() {
             target.input(boi.carrying);
             if (boi.carrying.getAmount() == 0) {
@@ -233,29 +245,38 @@ public class BoiJobSelector implements Supplier<Job> {
 
         @Override
         public Vector2 getWantedSpeed() {
-            return getSpeedTowards(getPosition(boi.house.getEntity()), getPosition(boi.boiEntity));
+            return getSpeedTowards(getHomePosition(), getPosition(boi.boiEntity));
         }
 
         @Override
         public boolean isJobFailed() {
             return false;
         }
+
+        @Override
+        public Optional<Vector2> getTargetPosition() {
+            return Optional.of(getHomePosition());
+        }
+    }
+
+    private PositionComponent getHomePosition() {
+        return getPosition(boi.house.getEntity());
     }
 
     private class PickupJob implements Job {
 
-        private final ItemProducerComponent source;
+        private final ItemProducerComponent target;
 
-        public PickupJob(ItemProducerComponent source) {
+        public PickupJob(ItemProducerComponent target) {
             RenderHudSystem.log("Starting PickupJob");
-            this.source = source;
+            this.target = target;
         }
 
         @Override
         public void finish() {
-            ImmutableItemStack biggestStack = source.getBiggestStack()
+            ImmutableItemStack biggestStack = target.getBiggestStack()
                     .orElseThrow(() -> new IllegalStateException("There are no stacks to pickup from!"));
-            ItemStack newItemStack = source.output(biggestStack.itemType, Boi.MAX_CARRY);
+            ItemStack newItemStack = target.output(biggestStack.itemType, Boi.MAX_CARRY);
             if (newItemStack.getAmount() > 0) {
                 boi.carrying = newItemStack;
                 RenderHudSystem.log("Finished PickupJob");
@@ -267,21 +288,26 @@ public class BoiJobSelector implements Supplier<Job> {
 
         @Override
         public boolean canFinishJob() {
-            boolean isInRange = isInRange(source.hack_getEntity());
-            return isInRange && !source.getAvailableOutput().isEmpty();
+            boolean isInRange = isInRange(target.hack_getEntity());
+            return isInRange && !target.getAvailableOutput().isEmpty();
         }
 
         @Override
         public Vector2 getWantedSpeed() {
-            return getSpeedTowards(getPosition(source.hack_getEntity()), getPosition(boi.boiEntity));
+            return getSpeedTowards(getPosition(target.hack_getEntity()), getPosition(boi.boiEntity));
         }
 
 
         @Override
         public boolean isJobFailed() {
-            return source.getBiggestStack()
+            return target.getBiggestStack()
                     .map(biggestStack -> biggestStack.getAmount() == 0)
                     .orElse(true);
+        }
+
+        @Override
+        public Optional<Vector2> getTargetPosition() {
+            return Optional.of(getPosition(target.hack_getEntity()));
         }
     }
 }

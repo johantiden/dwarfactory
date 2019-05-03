@@ -22,7 +22,7 @@ public class JLists {
         return list;
     }
 
-    public static <T, R> ImmutableArray<R> map(Function<T, R> mapper, ImmutableArray<T> ts) {
+    public static <T, R> ImmutableArray<R> mapToImmutable(Function<T, R> mapper, Iterable<T> ts) {
         Array<R> list = new Array<>();
         for (T t : ts) {
             list.add(mapper.apply(t));

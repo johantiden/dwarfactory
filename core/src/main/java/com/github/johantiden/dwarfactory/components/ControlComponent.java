@@ -4,60 +4,65 @@ import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.game.entities.SelectJobContext;
 
-import java.util.Objects;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.function.Function;
 
 public class ControlComponent implements Component {
 
-    private final Function<SelectJobContext, Job> jobSelector;
+    private final Function<SelectJobContext, Collection<Job>> jobSelector;
 
-    private Job job;
+    private final Queue<Job> jobQueue = new LinkedList<>();
 
-    public ControlComponent(Function<SelectJobContext, Job> jobSelector) {this.jobSelector = jobSelector;}
+    public ControlComponent(Function<SelectJobContext, Collection<Job>> jobSelector) {this.jobSelector = jobSelector;}
 
 
     public boolean hasJob() {
-        return job != null;
+        return !jobQueue.isEmpty();
     }
 
     public void finishJob() {
-        Objects.requireNonNull(job, "job == null. Call hasJob first!");
+        assert !jobQueue.isEmpty();
+        Job job = jobQueue.remove();
         job.finish();
-        job = null;
     }
 
     public void trySelectNewJob(SelectJobContext selectJobContext) {
-        Job job = jobSelector.apply(selectJobContext);
-        this.job = job;
+        Collection<Job> job = jobSelector.apply(selectJobContext);
+        this.jobQueue.addAll(job);
     }
 
     public boolean canFinishJob() {
-        Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        return job.canFinishJob();
+        assert !jobQueue.isEmpty();
+        return jobQueue.peek().canFinishJob();
     }
 
     public boolean isJobFailed() {
-        Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        return job.isJobFailed();
+        assert !jobQueue.isEmpty();
+        return jobQueue.stream()
+                .anyMatch(Job::isJobFailed);
     }
-
 
     public void fail() {
-        Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        job.fail();
-        job = null;
+        jobQueue.forEach(Job::fail);
+        jobQueue.clear();
     }
 
-    public Vector2 getWantedSpeed() {
-        Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        return job.getWantedSpeed();
+    private Vector2 getWantedSpeed() {
+        assert !jobQueue.isEmpty();
+        return jobQueue.peek().getWantedSpeed();
     }
 
     public Vector2 asSpeed() {
-        if (job != null) {
+        if (!jobQueue.isEmpty()) {
             return getWantedSpeed();
         } else {
             return new Vector2(0, 0);
         }
+    }
+
+    public Iterable<Job> getJobQueue() {
+        return jobQueue;
     }
 }

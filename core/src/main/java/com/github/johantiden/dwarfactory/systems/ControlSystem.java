@@ -56,8 +56,8 @@ public class ControlSystem extends EntitySystem {
             }
             if (!control.hasJob()) {
                 RenderHudSystem.log("No job, Selecting new...");
-                ImmutableArray<ItemConsumerComponent> itemConsumerComponents = JLists.map(itemConsumerMapper::get, itemConsumers);
-                ImmutableArray<ItemProducerComponent> allItemProducers = JLists.map(itemProducerMapper::get, itemProducers);
+                ImmutableArray<ItemConsumerComponent> itemConsumerComponents = JLists.mapToImmutable(itemConsumerMapper::get, itemConsumers);
+                ImmutableArray<ItemProducerComponent> allItemProducers = JLists.mapToImmutable(itemProducerMapper::get, itemProducers);
                 control.trySelectNewJob(new SelectJobContext(itemConsumerComponents, allItemProducers));
             }
         }
