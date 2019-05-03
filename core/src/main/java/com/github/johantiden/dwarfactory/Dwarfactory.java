@@ -20,6 +20,7 @@ import com.github.johantiden.dwarfactory.systems.ControlSystem;
 import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
 import com.github.johantiden.dwarfactory.systems.RenderForegroundSystem;
 import com.github.johantiden.dwarfactory.systems.RenderHudSystem;
+import com.github.johantiden.dwarfactory.systems.SpeedFromControlSystem;
 import com.github.johantiden.dwarfactory.systems.TaskSystem;
 import com.github.johantiden.dwarfactory.systems.physics.AccelerationSystem;
 import com.github.johantiden.dwarfactory.systems.physics.ForceSystem;
@@ -54,6 +55,7 @@ public class Dwarfactory extends ApplicationAdapter {
         renderHudSystem = new RenderHudSystem(camera);
         engine.addSystem(renderHudSystem);
         engine.addSystem(new ControlSystem());
+        engine.addSystem(new SpeedFromControlSystem());
         engine.addSystem(new TaskSystem());
 
         MyInputProcessor inputProcessor = new MyInputProcessor(camera, onMouseMoved());

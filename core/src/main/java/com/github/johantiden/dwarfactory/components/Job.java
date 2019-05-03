@@ -8,7 +8,7 @@ public interface Job {
     default void finish() {
     }
 
-    Vector2 getWantedAcceleration(ForceContext forceContext);
+    Vector2 getWantedSpeed();
 
     default boolean isJobFailed() {
         return false;

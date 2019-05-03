@@ -3,7 +3,6 @@ package com.github.johantiden.dwarfactory.components;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.game.entities.SelectJobContext;
-import com.github.johantiden.dwarfactory.systems.physics.Force;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -49,18 +48,16 @@ public class ControlComponent implements Component {
         job = null;
     }
 
-    public Vector2 getWantedForce(ForceContext forceContext) {
+    public Vector2 getWantedSpeed() {
         Objects.requireNonNull(job, "job == null. Call hasJob first!");
-        return job.getWantedAcceleration(forceContext);
+        return job.getWantedSpeed();
     }
 
-    public Force asForce() {
-        return forceContext -> {
-            if (job != null) {
-                return getWantedForce(forceContext);
-            } else {
-                return new Vector2(0, 0);
-            }
-        };
+    public Vector2 asSpeed() {
+        if (job != null) {
+            return getWantedSpeed();
+        } else {
+            return new Vector2(0, 0);
+        }
     }
 }
