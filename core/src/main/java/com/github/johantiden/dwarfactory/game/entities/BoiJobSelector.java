@@ -9,6 +9,7 @@ import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
 import com.github.johantiden.dwarfactory.components.Job;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
+import com.github.johantiden.dwarfactory.systems.RenderHudSystem;
 import com.github.johantiden.dwarfactory.util.JLists;
 
 import java.util.Comparator;
@@ -51,7 +52,9 @@ public class BoiJobSelector implements Supplier<Job> {
         if (boi.carrying != null) {
             Optional<ItemConsumerComponent> maybeNewConsumer = chooseTarget(selectJobContext, false);
             return maybeNewConsumer
-                    .map(this::deliveryJob)
+                    .map(target -> {
+                        return (Job)new DeliveryJob(target);
+                    })
                     .orElseGet(() -> {
                         // no one wants my stuff :( go home and wait
                         return dropResourcesThenGoHomeAndWait();
@@ -60,47 +63,12 @@ public class BoiJobSelector implements Supplier<Job> {
         } else {
             Optional<ItemProducerComponent> maybeNewProducer = chooseSource(selectJobContext);
             return maybeNewProducer
-                    .map(this::pickupJob)
+                    .map(source -> (Job)new PickupJob(source))
                     .orElseGet(() -> {
                         // nothing to pick up.
                         return dropResourcesThenGoHomeAndWait();
                     });
         }
-    }
-
-    private Job pickupJob(ItemProducerComponent source) {
-        return new Job() {
-
-            @Override
-            public void finish() {
-                ImmutableItemStack biggestStack = source.getBiggestStack()
-                        .orElseThrow(() -> new IllegalStateException("There are no stacks to pickup from!"));
-                ItemStack newItemStack = source.output(biggestStack.itemType, Boi.MAX_CARRY);
-                if (newItemStack.getAmount() > 0) {
-                    boi.carrying = newItemStack;
-                } else {
-                    boi.carrying = null;
-                }
-            }
-
-            @Override
-            public boolean canFinishJob() {
-                boolean isInRange = isInRange(source.hack_getEntity());
-                return isInRange && !source.getAvailableOutput().isEmpty();
-            }
-
-            @Override
-            public Vector2 getWantedSpeed() {
-                return getSpeedTowards(getPosition(source.hack_getEntity()), getPosition(boi.boiEntity));
-            }
-
-
-            @Override
-            public boolean isJobFailed() {
-                boolean isInRange = isInRange(source.hack_getEntity());
-                return !isInRange;
-            }
-        };
     }
 
     private PositionComponent getPosition(Entity entity) {
@@ -111,12 +79,14 @@ public class BoiJobSelector implements Supplier<Job> {
         if (boi.carrying != null) {
             Optional<ItemConsumerComponent> backupConsumer = chooseTarget(selectJobContext, true);
             if (backupConsumer.isPresent()) {
-                return deliveryJob(backupConsumer.get());
+                ItemConsumerComponent target = backupConsumer.get();
+                Objects.requireNonNull(target);
+                return new DeliveryJob(target);
             }
         }
 
         if (!isHome()) {
-            return goHomeJob();
+            return new GoHomeJob();
         }
 
         return waitJob();
@@ -224,54 +194,94 @@ public class BoiJobSelector implements Supplier<Job> {
         return getDistanceSquared(homePosition, myPosition);
     }
 
-    private Job goHomeJob() {
-        return new Job() {
-
-            @Override
-            public boolean canFinishJob() {
-                return isInRange(boi.house.getEntity());
-            }
-
-            @Override
-            public Vector2 getWantedSpeed() {
-                return getSpeedTowards(getPosition(boi.house.getEntity()), getPosition(boi.boiEntity));
-            }
-
-            @Override
-            public boolean isJobFailed() {
-                return false;
-            }
-        };
-    }
-
     private boolean isHome() {
         return isInRange(boi.house.getEntity());
     }
 
-    private Job deliveryJob(ItemConsumerComponent target) {
-        Objects.requireNonNull(target);
-        return new Job() {
 
-            @Override
-            public boolean canFinishJob() {
-                return isInRange(target.hack_getEntity());
-            }
+    private class DeliveryJob implements Job {
 
-            @Override
-            public Vector2 getWantedSpeed() {
-                return getSpeedTowards(getPosition(target.hack_getEntity()), getPosition(boi.boiEntity));
-            }
+        private final ItemConsumerComponent target;
 
-            @Override
-            public void finish() {
-                target.input(boi.carrying);
-                if (boi.carrying.getAmount() == 0) {
-                    boi.carrying = null;
-                }
+        public DeliveryJob(ItemConsumerComponent target) {this.target = target;}
+
+        @Override
+        public boolean canFinishJob() {
+            return isInRange(target.hack_getEntity());
+        }
+
+        @Override
+        public Vector2 getWantedSpeed() {
+            return getSpeedTowards(getPosition(target.hack_getEntity()), getPosition(boi.boiEntity));
+        }
+
+        @Override
+        public void finish() {
+            target.input(boi.carrying);
+            if (boi.carrying.getAmount() == 0) {
+                boi.carrying = null;
             }
-        };
+        }
     }
 
+    private class GoHomeJob implements Job {
+
+        @Override
+        public boolean canFinishJob() {
+            return true;
+        }
+
+        @Override
+        public Vector2 getWantedSpeed() {
+            return getSpeedTowards(getPosition(boi.house.getEntity()), getPosition(boi.boiEntity));
+        }
+
+        @Override
+        public boolean isJobFailed() {
+            return false;
+        }
+    }
+
+    private class PickupJob implements Job {
+
+        private final ItemProducerComponent source;
+
+        public PickupJob(ItemProducerComponent source) {
+            RenderHudSystem.log("Starting PickupJob");
+            this.source = source;
+        }
+
+        @Override
+        public void finish() {
+            ImmutableItemStack biggestStack = source.getBiggestStack()
+                    .orElseThrow(() -> new IllegalStateException("There are no stacks to pickup from!"));
+            ItemStack newItemStack = source.output(biggestStack.itemType, Boi.MAX_CARRY);
+            if (newItemStack.getAmount() > 0) {
+                boi.carrying = newItemStack;
+                RenderHudSystem.log("Finished PickupJob");
+            } else {
+                RenderHudSystem.log("Finished PickupJob but didn't pick up anything!");
+                boi.carrying = null;
+            }
+        }
+
+        @Override
+        public boolean canFinishJob() {
+            boolean isInRange = isInRange(source.hack_getEntity());
+            return isInRange && !source.getAvailableOutput().isEmpty();
+        }
+
+        @Override
+        public Vector2 getWantedSpeed() {
+            return getSpeedTowards(getPosition(source.hack_getEntity()), getPosition(boi.boiEntity));
+        }
 
 
+        @Override
+        public boolean isJobFailed() {
+            return source.getBiggestStack()
+                    .map(biggestStack -> biggestStack.getAmount() == 0)
+                    .orElse(true);
+        }
+    }
 }

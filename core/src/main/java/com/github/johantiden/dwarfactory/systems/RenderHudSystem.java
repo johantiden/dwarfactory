@@ -5,6 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.github.johantiden.dwarfactory.Dwarfactory;
+import com.github.johantiden.dwarfactory.struct.FifoWithLimit;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 import com.github.johantiden.dwarfactory.util.FontUtil;
@@ -15,20 +17,40 @@ import java.util.List;
 
 public class RenderHudSystem extends EntitySystem {
     private final SpriteBatch batch;
-    private final BitmapFont font;
+    private final BitmapFont font20 = FontUtil.getFont(20);
+    private final BitmapFont font32 = FontUtil.getFont(32);
     private final Camera camera;
 
     private ImmutableVector2Int mouseScreenCoordinates;
 
+    private static final FifoWithLimit<String> log = new FifoWithLimit<>(15);
+    public static final int ROW_HEIGHT_20 = 20;
+
+    public static void log(String message) {
+        log.add(message);
+    }
+
     public RenderHudSystem(Camera camera) {
         this.camera = camera;
         batch = new SpriteBatch();
-        font = FontUtil.getFont(32);
     }
 
     @Override
     public void update(float deltaTime) {
         drawDebug(deltaTime);
+        drawLog();
+    }
+
+    private void drawLog() {
+        int i = 0;
+        batch.begin();
+
+        for (String message : log) {
+            font20.draw(batch, message, 10, Dwarfactory.VIEWPORT_HEIGHT-ROW_HEIGHT_20*i);
+            i++;
+        }
+        batch.end();
+
     }
 
     private void drawDebug(float deltaTime) {
@@ -42,9 +64,8 @@ public class RenderHudSystem extends EntitySystem {
 
         Collections.reverse(debugLines);
         batch.begin();
-        int rowHeight = 50;
         for (int i = 0; i < debugLines.size(); i++) {
-            font.draw(batch, debugLines.get(i), 10, rowHeight*(i+1));
+            font20.draw(batch, debugLines.get(i), 10, ROW_HEIGHT_20 *(i+1));
         }
         batch.end();
     }

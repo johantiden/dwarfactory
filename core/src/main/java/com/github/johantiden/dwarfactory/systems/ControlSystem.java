@@ -44,15 +44,18 @@ public class ControlSystem extends EntitySystem {
 
             if (control.hasJob()) {
                 if (control.isJobFailed()) {
+                    RenderHudSystem.log("Job failed");
                     control.fail();
                 }
             }
             if (control.hasJob()) {
                 if (control.canFinishJob()) {
+                    RenderHudSystem.log("Job finishing...");
                     control.finishJob();
                 }
             }
             if (!control.hasJob()) {
+                RenderHudSystem.log("No job, Selecting new...");
                 ImmutableArray<ItemConsumerComponent> itemConsumerComponents = JLists.map(itemConsumerMapper::get, itemConsumers);
                 ImmutableArray<ItemProducerComponent> allItemProducers = JLists.map(itemProducerMapper::get, itemProducers);
                 control.trySelectNewJob(new SelectJobContext(itemConsumerComponents, allItemProducers));
