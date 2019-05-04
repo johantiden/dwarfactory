@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class JLists {
@@ -26,6 +27,16 @@ public class JLists {
         Array<R> list = new Array<>();
         for (T t : ts) {
             list.add(mapper.apply(t));
+        }
+        return new ImmutableArray<>(list);
+    }
+
+    public static <T> ImmutableArray<T> filterToImmutable(Predicate<T> filter, Iterable<T> ts) {
+        Array<T> list = new Array<>();
+        for (T t : ts) {
+            if (filter.test(t)) {
+                list.add(t);
+            }
         }
         return new ImmutableArray<>(list);
     }

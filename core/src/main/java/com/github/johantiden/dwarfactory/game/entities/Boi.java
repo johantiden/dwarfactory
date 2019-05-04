@@ -18,6 +18,8 @@ import com.github.johantiden.dwarfactory.game.entities.factory.House;
 import java.util.Collection;
 import java.util.Optional;
 
+import static com.github.johantiden.dwarfactory.game.entities.factory.Factory.FONT_SIZE;
+
 public class Boi {
     public static final int RANGE_SQUARED = 100;
 
@@ -49,7 +51,7 @@ public class Boi {
         VisualComponent mainVisual = VisualComponent.create2AnglesAnimated(
                 Assets.Boi.LEFT,
                 Assets.Boi.RIGHT);
-        VisualComponent carryVisual = StringOverlayVisual.create(new Color(1,0,0,1), SIZE, new Vector2(SIZE*2/5, -SIZE*2/5), () -> boi.tryGetCarrying().map(carrying -> String.valueOf(carrying.getAmount())));
+        VisualComponent carryVisual = StringOverlayVisual.create(new Color(1,0,0,1), FONT_SIZE, new Vector2(SIZE*2/5, -SIZE*2/5), () -> boi.tryGetCarrying().map(carrying -> String.valueOf(carrying.getAmount()) + " " + carrying.itemType.name()));
         entity.add(VisualComponent.blend(mainVisual, carryVisual));
         entity.add(new SizeComponent(SIZE, SIZE));
         engine.addEntity(entity);

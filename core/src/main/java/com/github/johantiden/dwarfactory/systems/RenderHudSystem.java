@@ -3,22 +3,20 @@ package com.github.johantiden.dwarfactory.systems;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.github.johantiden.dwarfactory.Dwarfactory;
 import com.github.johantiden.dwarfactory.struct.FifoWithLimit;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
-import com.github.johantiden.dwarfactory.util.FontUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.github.johantiden.dwarfactory.util.FontUtil.font;
+
 public class RenderHudSystem extends EntitySystem {
     private final SpriteBatch batch;
-    private final BitmapFont font20 = FontUtil.getFont(20);
-    private final BitmapFont font32 = FontUtil.getFont(32);
     private final Camera camera;
 
     private ImmutableVector2Int mouseScreenCoordinates;
@@ -46,7 +44,7 @@ public class RenderHudSystem extends EntitySystem {
         batch.begin();
 
         for (String message : log) {
-            font20.draw(batch, message, 10, Dwarfactory.VIEWPORT_HEIGHT-ROW_HEIGHT_20*i);
+            font(20).draw(batch, message, 10, Dwarfactory.VIEWPORT_HEIGHT-ROW_HEIGHT_20*i);
             i++;
         }
         batch.end();
@@ -65,7 +63,7 @@ public class RenderHudSystem extends EntitySystem {
         Collections.reverse(debugLines);
         batch.begin();
         for (int i = 0; i < debugLines.size(); i++) {
-            font20.draw(batch, debugLines.get(i), 10, ROW_HEIGHT_20 *(i+1));
+            font(20).draw(batch, debugLines.get(i), 10, ROW_HEIGHT_20 *(i+1));
         }
         batch.end();
     }

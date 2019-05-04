@@ -28,10 +28,11 @@ import com.github.johantiden.dwarfactory.components.VisualComponent;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
 import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
-import com.github.johantiden.dwarfactory.util.FontUtil;
 
 import java.util.List;
 import java.util.Optional;
+
+import static com.github.johantiden.dwarfactory.util.FontUtil.font;
 
 public class RenderForegroundSystem extends EntitySystem {
     private static final boolean DRAW_DEBUG = true;
@@ -40,9 +41,6 @@ public class RenderForegroundSystem extends EntitySystem {
     private final Texture mouseTileTexture;
 
     private ImmutableArray<Entity> entitites;
-
-    private final BitmapFont font = FontUtil.getFont(FONT_SIZE);
-    private final BitmapFont fontLarger = FontUtil.getFont((int) (FONT_SIZE*1.1));
 
     private final SpriteBatch spriteBatch;
     private final SpriteBatch unprojectedSpriteBatch;
@@ -223,10 +221,10 @@ public class RenderForegroundSystem extends EntitySystem {
     }
 
     private void debugRenderItemInput() {
+        BitmapFont font = font(FONT_SIZE);
         debugSpriteBatch.setProjectionMatrix(camera.combined);
         debugSpriteBatch.begin();
         font.setColor(1, 0, 0, 1);
-        fontLarger.setColor(0, 0, 0, 1);
 
         for (Entity entity : entitites) {
             if (positionManager.has(entity) &&
@@ -237,7 +235,6 @@ public class RenderForegroundSystem extends EntitySystem {
                 ItemConsumerComponent itemConsumer = itemConsumerManger.get(entity);
 
                 String s = Factory.stacksToString(itemConsumer.getBag().snapshotStacks());
-                fontLarger.draw(debugSpriteBatch, s, position.x - size.x/2, position.y - size.y/2);
                 font.draw(debugSpriteBatch, s, position.x - size.x/2, position.y - size.y/2);
             }
         }
@@ -246,10 +243,10 @@ public class RenderForegroundSystem extends EntitySystem {
     }
 
     private void debugRenderItemOutput() {
+        BitmapFont font = font(FONT_SIZE);
         debugSpriteBatch.setProjectionMatrix(camera.combined);
         debugSpriteBatch.begin();
         font.setColor(0, 1, 0, 1);
-        fontLarger.setColor(0, 0, 0, 1);
 
         for (Entity entity : entitites) {
             if (positionManager.has(entity) &&
@@ -260,7 +257,6 @@ public class RenderForegroundSystem extends EntitySystem {
                 ItemProducerComponent itemProducerComponent = itemProducerManager.get(entity);
 
                 String s = Factory.stacksToString(itemProducerComponent.getBag().snapshotStacks());
-                fontLarger.draw(debugSpriteBatch, s, position.x, position.y - size.y/2);
                 font.draw(debugSpriteBatch, s, position.x, position.y - size.y/2);
             }
         }

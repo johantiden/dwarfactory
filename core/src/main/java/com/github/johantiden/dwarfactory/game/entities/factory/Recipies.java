@@ -21,7 +21,7 @@ public class Recipies {
 
     public static final Recipe SELL_APPLE_JUICE = new Recipe(
             newArrayList(new ImmutableItemStack(ItemType.APPLE_JUICE, 1)),
-            newArrayList(),
+            newArrayList(new ImmutableItemStack(ItemType.MONEY, 1)),
             20
     );
 
