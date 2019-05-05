@@ -55,6 +55,7 @@ public class Boi {
         entity.add(VisualComponent.blend(mainVisual, carryVisual));
         entity.add(new SizeComponent(SIZE, SIZE));
         engine.addEntity(entity);
+
     }
 
     private Collection<Job> selectNewJob(SelectJobContext selectJobContext) {

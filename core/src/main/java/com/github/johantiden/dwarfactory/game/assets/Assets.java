@@ -36,6 +36,17 @@ public class Assets {
         public static final TextureRegion UP = new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (1).png"));
         public static final TextureRegion DOWN = new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (1).png"));
         public static final List<TextureRegion> LEFT = JLists.newArrayList(
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (1).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (2).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (3).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (4).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (5).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (6).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (7).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (8).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (9).png"), 429, 0, -430, 519),
+                new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (10).png"), 429, 0, -430, 519));
+        public static final List<TextureRegion> RIGHT = JLists.newArrayList(
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (1).png")),
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (2).png")),
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (3).png")),
@@ -46,7 +57,6 @@ public class Assets {
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (8).png")),
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (9).png")),
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (10).png")));
-        public static final List<TextureRegion> RIGHT = LEFT;
     }
 
 
