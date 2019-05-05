@@ -25,7 +25,7 @@ public class Boi {
 
     static final int MAX_CARRY = 5;
     public static final int SIZE = 50;
-    public static final int MAX_SPEED = 100;
+    public static final int MAX_SPEED = 300;
 
     final Entity boiEntity;
     final House house;
@@ -51,7 +51,7 @@ public class Boi {
         VisualComponent mainVisual = VisualComponent.create2AnglesAnimated(
                 Assets.Boi.LEFT,
                 Assets.Boi.RIGHT);
-        VisualComponent carryVisual = StringOverlayVisual.create(new Color(1,0,0,1), FONT_SIZE, new Vector2(SIZE*2/5, -SIZE*2/5), () -> boi.tryGetCarrying().map(carrying -> String.valueOf(carrying.getAmount()) + " " + carrying.itemType.name()));
+        VisualComponent carryVisual = StringOverlayVisual.create(new Color(1,0,0,1), FONT_SIZE, new Vector2(SIZE*2/5, -SIZE*2/5), () -> boi.tryGetCarrying().map(carrying -> String.valueOf(carrying.getAmount()) + " " + carrying.itemType.prettyName));
         entity.add(VisualComponent.blend(mainVisual, carryVisual));
         entity.add(new SizeComponent(SIZE, SIZE));
         engine.addEntity(entity);

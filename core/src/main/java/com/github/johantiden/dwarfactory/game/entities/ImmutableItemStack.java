@@ -23,4 +23,8 @@ public class ImmutableItemStack {
     public ItemType getItemType() {
         return itemType;
     }
+
+    public ItemStack toMutable() {
+        return new ItemStack(itemType, amount);
+    }
 }

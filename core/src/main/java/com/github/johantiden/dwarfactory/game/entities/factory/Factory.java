@@ -2,7 +2,6 @@ package com.github.johantiden.dwarfactory.game.entities.factory;
 
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.PooledEngine;
-import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
@@ -18,10 +17,8 @@ import com.github.johantiden.dwarfactory.game.entities.EntityRenderer;
 import com.github.johantiden.dwarfactory.game.entities.ImmutableItemStack;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
-import com.github.johantiden.dwarfactory.util.JLists;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 
@@ -108,16 +105,6 @@ public class Factory {
                         }
                     }
                 });
-    }
-
-    public static String stacksToString(ImmutableArray<ImmutableItemStack> immutableItemStacks) {
-        ImmutableArray<ImmutableItemStack> nonEmpty = JLists.filterToImmutable(s -> s.getAmount() != 0, immutableItemStacks);
-
-        List<String> collect = JLists.stream(nonEmpty)
-                .map(immutableItemStack -> String.valueOf(immutableItemStack.amount) + " " + immutableItemStack.itemType.name())
-                .collect(Collectors.toList());
-        return String.join(",", collect);
-
     }
 
 }

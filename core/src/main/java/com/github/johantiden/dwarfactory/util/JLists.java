@@ -2,10 +2,13 @@ package com.github.johantiden.dwarfactory.util;
 
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.github.czyzby.kiwi.util.gdx.collection.immutable.ImmutableObjectMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -47,5 +50,15 @@ public class JLists {
             builder.accept(t);
         }
         return builder.build();
+    }
+
+    public static <K, V, KI, VI> ImmutableObjectMap<KI, VI> immutable(Map<K, V> map, Function<K, KI> keyToImmutable, Function<V, VI> valueToImmutable) {
+        ObjectMap<KI, VI> objectMap = new ObjectMap<>();
+
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            objectMap.put(keyToImmutable.apply(entry.getKey()), valueToImmutable.apply(entry.getValue()));
+        }
+
+        return new ImmutableObjectMap<>(objectMap);
     }
 }

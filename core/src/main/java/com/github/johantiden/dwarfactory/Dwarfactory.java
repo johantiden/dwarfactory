@@ -13,7 +13,7 @@ import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.game.World;
 import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
 import com.github.johantiden.dwarfactory.game.entities.factory.House;
-import com.github.johantiden.dwarfactory.game.entities.factory.Recipies;
+import com.github.johantiden.dwarfactory.game.entities.factory.Recipes;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.ControlSystem;
@@ -86,20 +86,20 @@ public class Dwarfactory extends ApplicationAdapter {
     }
 
     private void createGameEntities() {
-        Factory.createFactory(new TileCoordinate(3,7), engine, 0.1f, Recipies.APPLE_GARDEN);
-        Factory.createFactory(new TileCoordinate(3,10), engine, 0.5f, Recipies.APPLE_GARDEN);
-        Factory.createFactory(new TileCoordinate(3,13), engine, 0.9f, Recipies.APPLE_GARDEN);
+        Factory.createFactory(new TileCoordinate(3,7), engine, 0.1f, Recipes.APPLE_GARDEN);
+        Factory.createFactory(new TileCoordinate(3,10), engine, 0.5f, Recipes.APPLE_GARDEN);
+        Factory.createFactory(new TileCoordinate(3,13), engine, 0.9f, Recipes.APPLE_GARDEN);
+
+
+        Factory.createFactory(new TileCoordinate(7,4), engine, 0, Recipes.APPLE_JUICER);
+        Factory.createFactory(new TileCoordinate(7,1), engine, 0, Recipes.APPLE_JUICER);
+
+        Factory.createFactory(new TileCoordinate(17, 1), engine, 0, Recipes.SELL_APPLE_JUICE);
 
         House.createHouse(new TileCoordinate(6,7), engine, 1);
         House.createHouse(new TileCoordinate(6,8), engine, 1);
         House.createHouse(new TileCoordinate(6,9), engine, 1);
-
-        Factory.createFactory(new TileCoordinate(7,4), engine, 0, Recipies.APPLE_JUICER);
-        Factory.createFactory(new TileCoordinate(7,1), engine, 0, Recipies.APPLE_JUICER);
-
-        House.createHouse(new TileCoordinate(10,3), engine, 1);
-
-        Factory.createFactory(new TileCoordinate(17, 1), engine, 0, Recipies.SELL_APPLE_JUICE);
+        House.createHouse(new TileCoordinate(15,2), engine, 1);
     }
 
     public static void log(String string) {

@@ -6,23 +6,23 @@ import java.util.Collections;
 
 import static com.github.johantiden.dwarfactory.util.JLists.newArrayList;
 
-public class Recipies {
+public class Recipes {
     public static final Recipe APPLE_GARDEN = new Recipe(
             Collections.emptyList(),
             newArrayList(new ImmutableItemStack(ItemType.APPLE, 1)),
-            8
+            4
     );
 
     public static final Recipe APPLE_JUICER = new Recipe(
             newArrayList(new ImmutableItemStack(ItemType.APPLE, 1)),
             newArrayList(new ImmutableItemStack(ItemType.APPLE_JUICE, 1)),
-            6
+            3
     );
 
     public static final Recipe SELL_APPLE_JUICE = new Recipe(
             newArrayList(new ImmutableItemStack(ItemType.APPLE_JUICE, 1)),
             newArrayList(new ImmutableItemStack(ItemType.MONEY, 1)),
-            20
+            10
     );
 
 }

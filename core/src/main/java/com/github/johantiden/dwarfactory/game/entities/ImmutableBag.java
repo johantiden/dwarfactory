@@ -6,6 +6,7 @@ import com.github.czyzby.kiwi.util.gdx.collection.immutable.ImmutableObjectMap;
 import com.github.johantiden.dwarfactory.game.entities.factory.ItemType;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ImmutableBag {
@@ -22,6 +23,16 @@ public class ImmutableBag {
             if (!predicate.test(entry.value)) {
                 newMap.remove(entry.key);
             }
+        }
+
+        return new ImmutableBag(new ImmutableObjectMap<>(newMap));
+    }
+
+    public ImmutableBag map(Function<ImmutableItemStack, ImmutableItemStack> mapper) {
+        ObjectMap<ItemType, ImmutableItemStack> newMap = new ObjectMap<>(stacks);
+
+        for (Entry<ItemType, ImmutableItemStack> entry : stacks.entries()) {
+            newMap.put(entry.key, mapper.apply(entry.value));
         }
 
         return new ImmutableBag(new ImmutableObjectMap<>(newMap));

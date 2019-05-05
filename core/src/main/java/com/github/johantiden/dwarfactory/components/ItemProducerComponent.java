@@ -18,6 +18,7 @@ public class ItemProducerComponent implements Component {
     private final Bag bag;
     private final Priority priority;
 
+
     public ItemProducerComponent(Entity entity, Bag bag, Priority priority) {
         this.entity = entity;
         this.bag = bag;
@@ -40,11 +41,6 @@ public class ItemProducerComponent implements Component {
 
     public ItemStack output(ItemType itemType, int amount) {
         return bag.output(itemType, amount);
-    }
-
-    public ImmutableBag getAvailableOutput() {
-        return bag.snapshot()
-                .filterByValue(stack -> stack.getAmount() > 0);
     }
 
     public ImmutableBag getOutputStacks() {
@@ -77,7 +73,7 @@ public class ItemProducerComponent implements Component {
 
     public boolean hasFullOutput() {
         return getBiggestStack()
-                .map(biggestStack -> biggestStack.amount == ItemStack.MAX_AMOUNT)
+                .map(biggestStack -> biggestStack.amount == biggestStack.itemType.maxAmount)
                 .orElse(false);
     }
 }

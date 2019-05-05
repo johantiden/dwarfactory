@@ -3,8 +3,7 @@ package com.github.johantiden.dwarfactory.game.entities;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.math.Vector2;
-import com.github.czyzby.kiwi.util.tuple.immutable.Pair;
-import com.github.johantiden.dwarfactory.components.ForceContext;
+import com.github.czyzby.kiwi.util.tuple.immutable.Triple;
 import com.github.johantiden.dwarfactory.components.ItemConsumerComponent;
 import com.github.johantiden.dwarfactory.components.ItemProducerComponent;
 import com.github.johantiden.dwarfactory.components.Job;
@@ -22,6 +21,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.github.johantiden.dwarfactory.game.entities.Boi.MAX_CARRY;
 import static com.github.johantiden.dwarfactory.game.entities.Boi.MAX_SPEED;
 
 public class BoiJobSelector {
@@ -51,18 +51,23 @@ public class BoiJobSelector {
         if (boi.carrying != null) {
             Optional<ItemConsumerComponent> maybeNewConsumer = chooseTarget(selectJobContext, boi.carrying.itemType, false);
             return maybeNewConsumer
-                    .map(target -> {
-                        return JLists.newArrayList((Job)new DeliveryJob(target));
-                    })
+                    .map(target -> JLists.newArrayList((Job)new DeliveryJob(target, boi.carrying)))
                     .orElseGet(() -> {
                         // no one wants my stuff :( go home and wait
                         return dropResourcesThenGoHomeAndWait();
                     });
 
         } else {
-            Optional<Pair<ItemProducerComponent, ItemConsumerComponent>> maybeNewProducer = choosePickupAndDelivery(selectJobContext);
+            Optional<Triple<ItemProducerComponent, ItemConsumerComponent, ItemStack>> maybeNewProducer = choosePickupAndDelivery(selectJobContext);
             return maybeNewProducer
-                    .map(plan -> JLists.newArrayList(new PickupJob(plan.getFirst()), new DeliveryJob(plan.getSecond())))
+                    .map(plan -> {
+                        ItemProducerComponent producer = plan.getFirst();
+                        ItemConsumerComponent consumer = plan.getSecond();
+                        ItemStack mutableDeliveryStack = plan.getThird();
+                        DeliveryJob deliveryJob = new DeliveryJob(consumer, mutableDeliveryStack);
+                        PickupJob pickupJob = new PickupJob(producer, mutableDeliveryStack);
+                        return JLists.newArrayList(pickupJob, deliveryJob);
+                    })
                     .orElseGet(() -> {
                         // nothing to pick up.
                         return dropResourcesThenGoHomeAndWait();
@@ -80,37 +85,18 @@ public class BoiJobSelector {
             if (backupConsumer.isPresent()) {
                 ItemConsumerComponent target = backupConsumer.get();
                 Objects.requireNonNull(target);
-                return JLists.newArrayList(new DeliveryJob(target));
+                return JLists.newArrayList(new DeliveryJob(target, boi.carrying));
             }
         }
 
         if (!isHome()) {
-            return JLists.newArrayList(new GoHomeJob(), waitJob());
+            return JLists.newArrayList(new GoHomeJob(), new IdleJob());
         } else {
-            return JLists.newArrayList(waitJob());
+            return JLists.newArrayList((Job) new IdleJob());
         }
 
     }
 
-
-    private Job waitJob() {
-        return new Job() {
-            @Override
-            public boolean canFinishJob() {
-                return true;
-            }
-
-            @Override
-            public Vector2 getWantedSpeed() {
-                return new Vector2(0, 0);
-            }
-
-            @Override
-            public Optional<Vector2> getTargetPosition() {
-                return Optional.empty();
-            }
-        };
-    }
 
     private Optional<ItemConsumerComponent> chooseTarget(SelectJobContext selectJobContext, ItemType itemType, boolean anyPriority) {
         Predicate<ItemConsumerComponent> wants = itemConsumerComponent -> itemConsumerComponent.wants(itemType);
@@ -130,9 +116,18 @@ public class BoiJobSelector {
         return Optional.of(eligibleReceivers.get(0));
     }
 
-    private Optional<Pair<ItemProducerComponent, ItemConsumerComponent>> choosePickupAndDelivery(SelectJobContext selectJobContext) {
+    public static ImmutableBag getAvailableOutput(ItemProducerComponent itemProducer) {
+        return itemProducer.getOutputStacks()
+                .filterByValue(stack -> {
+                    ItemType itemType = stack.itemType;
+                    int dibsSum = itemProducer.getBag().getDibsSum(itemType);
+                    return stack.getAmount() + dibsSum > 0;
+                });
+    }
+
+    private Optional<Triple<ItemProducerComponent, ItemConsumerComponent, ItemStack>> choosePickupAndDelivery(SelectJobContext selectJobContext) {
         List<ItemProducerComponent> eligibleProducers = JLists.stream(selectJobContext.allItemProducers)
-                .filter(itemProducer -> !itemProducer.getAvailableOutput().isEmpty())
+                .filter(itemProducer -> !getAvailableOutput(itemProducer).isEmpty())
                 .filter(anyoneWantsMyBiggestStack(selectJobContext, ItemConsumerComponent::wants))
                 .collect(Collectors.toList());
 
@@ -149,12 +144,14 @@ public class BoiJobSelector {
                         .thenComparing(p -> getPosition(p.hack_getEntity()), sortByProximityTo(boi.house.getEntity())));
 
         ItemProducerComponent itemProducerComponent = eligibleProducers.get(0);
-        ItemConsumerComponent itemConsumerComponent = chooseTarget(selectJobContext, itemProducerComponent.getBiggestStack().get().itemType, false)
+        ImmutableItemStack targetStack = itemProducerComponent.getBiggestStack().get();
+        ItemConsumerComponent itemConsumerComponent = chooseTarget(selectJobContext, targetStack.itemType, false)
                 .orElseThrow(() -> new IllegalStateException("No one wants my stack but we just filtered on that :("));
-        return Optional.of(new Pair<>(itemProducerComponent, itemConsumerComponent));
+        return Optional.of(new Triple<>(itemProducerComponent, itemConsumerComponent, new ItemStack(targetStack.itemType, MAX_CARRY)));
     }
 
-    private Predicate<ItemProducerComponent> anyoneWantsMyBiggestStack(SelectJobContext selectJobContext, BiPredicate<ItemConsumerComponent, ItemType> predicate) {
+    // TODO: We should choose here, which item stack to pickup. Return Optional
+    private static Predicate<ItemProducerComponent> anyoneWantsMyBiggestStack(SelectJobContext selectJobContext, BiPredicate<ItemConsumerComponent, ItemType> predicate) {
         return itemProducerComponent ->
                 itemProducerComponent.getBiggestStack()
                         .map(biggestStack -> {
@@ -181,11 +178,6 @@ public class BoiJobSelector {
         };
     }
 
-    private Vector2 brake(ForceContext forceContext) {
-        // brakes
-        return forceContext.speedComponent.cpy().scl(-0.5f);
-    }
-
     private boolean isInRange(Entity target) {
         float distanceSquared = getDistanceSquared(target, boi.boiEntity);
         return distanceSquared < Boi.RANGE_SQUARED;
@@ -205,12 +197,34 @@ public class BoiJobSelector {
         return isInRange(boi.house.getEntity());
     }
 
+    private static class IdleJob implements Job {
+        @Override
+        public boolean canFinishJob() {
+            return true;
+        }
+
+        @Override
+        public Vector2 getWantedSpeed() {
+            return new Vector2(0, 0);
+        }
+
+        @Override
+        public Optional<Vector2> getTargetPosition() {
+            return Optional.empty();
+        }
+    }
+
 
     private class DeliveryJob implements Job {
 
         private final ItemConsumerComponent target;
+        private final ItemStack dibsItemStack; // The amount in here may change due to jobs before this one in the job queue.
 
-        public DeliveryJob(ItemConsumerComponent target) {this.target = target;}
+        public DeliveryJob(ItemConsumerComponent target, ItemStack mutableDeliveryStack) {
+            this.target = target;
+            this.dibsItemStack = mutableDeliveryStack;
+            target.getBag().addDibs(mutableDeliveryStack);
+        }
 
         @Override
         public boolean canFinishJob() {
@@ -233,6 +247,7 @@ public class BoiJobSelector {
             if (boi.carrying.getAmount() == 0) {
                 boi.carrying = null;
             }
+            target.getBag().removeDibs(dibsItemStack);
         }
     }
 
@@ -266,17 +281,20 @@ public class BoiJobSelector {
     private class PickupJob implements Job {
 
         private final ItemProducerComponent target;
+        private final ItemStack deliveryItemStack;
+        private final ItemStack pickupItemStackNegative;
 
-        public PickupJob(ItemProducerComponent target) {
+        public PickupJob(ItemProducerComponent target, ItemStack deliveryItemStack) {
+            this.deliveryItemStack = deliveryItemStack;
+            this.pickupItemStackNegative = deliveryItemStack.negate();
             RenderHudSystem.log("Starting PickupJob");
             this.target = target;
+            target.getBag().addDibs(pickupItemStackNegative);
         }
 
         @Override
         public void finish() {
-            ImmutableItemStack biggestStack = target.getBiggestStack()
-                    .orElseThrow(() -> new IllegalStateException("There are no stacks to pickup from!"));
-            ItemStack newItemStack = target.output(biggestStack.itemType, Boi.MAX_CARRY);
+            ItemStack newItemStack = target.output(pickupItemStackNegative.itemType, MAX_CARRY);
             if (newItemStack.getAmount() > 0) {
                 boi.carrying = newItemStack;
                 RenderHudSystem.log("Finished PickupJob");
@@ -284,12 +302,15 @@ public class BoiJobSelector {
                 RenderHudSystem.log("Finished PickupJob but didn't pick up anything!");
                 boi.carrying = null;
             }
+
+            target.getBag().removeDibs(pickupItemStackNegative);
+            deliveryItemStack.setAmount(newItemStack.getAmount()); // We used to promise to deliver MAX_CARRY but now we know the exact amount.
         }
 
         @Override
         public boolean canFinishJob() {
             boolean isInRange = isInRange(target.hack_getEntity());
-            return isInRange && !target.getAvailableOutput().isEmpty();
+            return isInRange && !target.getBag().getStack(pickupItemStackNegative.itemType).isEmpty();
         }
 
         @Override
@@ -308,6 +329,11 @@ public class BoiJobSelector {
         @Override
         public Optional<Vector2> getTargetPosition() {
             return Optional.of(getPosition(target.hack_getEntity()));
+        }
+
+        @Override
+        public void fail() {
+            target.getBag().removeDibs(pickupItemStackNegative);
         }
     }
 }

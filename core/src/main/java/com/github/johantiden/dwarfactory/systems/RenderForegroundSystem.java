@@ -234,7 +234,7 @@ public class RenderForegroundSystem extends EntitySystem {
                 SizeComponent size = sizeManager.get(entity);
                 ItemConsumerComponent itemConsumer = itemConsumerManger.get(entity);
 
-                String s = Factory.stacksToString(itemConsumer.getBag().snapshotStacks());
+                String s = itemConsumer.getBag().toString();
                 font.draw(debugSpriteBatch, s, position.x - size.x/2, position.y - size.y/2);
             }
         }
@@ -256,7 +256,7 @@ public class RenderForegroundSystem extends EntitySystem {
                 SizeComponent size = sizeManager.get(entity);
                 ItemProducerComponent itemProducerComponent = itemProducerManager.get(entity);
 
-                String s = Factory.stacksToString(itemProducerComponent.getBag().snapshotStacks());
+                String s = itemProducerComponent.getBag().toString();
                 font.draw(debugSpriteBatch, s, position.x, position.y - size.y/2);
             }
         }
