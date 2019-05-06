@@ -9,7 +9,6 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
@@ -24,23 +23,17 @@ import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.TaskComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
-import com.github.johantiden.dwarfactory.game.TileCoordinate;
-import com.github.johantiden.dwarfactory.game.assets.Assets;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
-import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
-import com.github.johantiden.dwarfactory.util.CoordinateUtil;
+import com.github.johantiden.dwarfactory.game.input.MouseInputController;
 
 import java.util.List;
 import java.util.Optional;
 
-import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 import static com.github.johantiden.dwarfactory.util.FontUtil.font;
 
 public class RenderForegroundSystem extends EntitySystem {
     private static final boolean DRAW_DEBUG = true;
     public static final int FONT_SIZE = 32;
-    private ImmutableVector2Int mouseScreenCoordinates;
-    private final TextureRegion mouseTileTexture;
 
     private ImmutableArray<Entity> entitites;
 
@@ -51,6 +44,7 @@ public class RenderForegroundSystem extends EntitySystem {
     private final SpriteBatch debugSpriteBatch;
 
     private final Camera camera;
+    private final MouseInputController mouseInputController;
 
     private final ComponentMapper<PositionComponent> positionManager = ComponentMapper.getFor(PositionComponent.class);
     private final ComponentMapper<SpeedComponent> speedManager = ComponentMapper.getFor(SpeedComponent.class);
@@ -63,18 +57,14 @@ public class RenderForegroundSystem extends EntitySystem {
     private final ComponentMapper<ItemProducerComponent> itemProducerManager = ComponentMapper.getFor(ItemProducerComponent.class);
     private final ComponentMapper<ItemConsumerComponent> itemConsumerManger = ComponentMapper.getFor(ItemConsumerComponent.class);
 
-    public RenderForegroundSystem(Camera camera) {
+    public RenderForegroundSystem(Camera camera, MouseInputController mouseInputController) {
+        this.mouseInputController = mouseInputController;
         this.spriteBatch = new SpriteBatch();
         this.debugSpriteBatch = new SpriteBatch();
         this.unprojectedSpriteBatch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer(100);
         this.debugShapeRenderer = new ShapeRenderer(100);
         this.camera = camera;
-        this.mouseTileTexture = Assets.MOUSE_TILE_OVERLAY;
-    }
-
-    public void onMouseMoved(ImmutableVector2Int screenCoordinates) {
-        this.mouseScreenCoordinates = screenCoordinates;
     }
 
     @Override
@@ -119,20 +109,8 @@ public class RenderForegroundSystem extends EntitySystem {
             visual.renderSprites(spriteBatch, new RenderContext(speed, position, size, task));
         }
 
-        renderMouseOverlay();
-
+        mouseInputController.render(spriteBatch);
         spriteBatch.end();
-    }
-
-    private void renderMouseOverlay() {
-        if (mouseScreenCoordinates != null) {
-            TileCoordinate mouseTilePosition = CoordinateUtil.screenToTile(mouseScreenCoordinates, camera);
-            spriteBatch.draw(mouseTileTexture,
-                    TILE_SIZE * mouseTilePosition.x,
-                    TILE_SIZE * mouseTilePosition.y,
-                    TILE_SIZE,
-                    TILE_SIZE);
-        }
     }
 
     private void renderUnprojected() {

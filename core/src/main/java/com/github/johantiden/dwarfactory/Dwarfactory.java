@@ -14,7 +14,7 @@ import com.github.johantiden.dwarfactory.game.World;
 import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
 import com.github.johantiden.dwarfactory.game.entities.factory.House;
 import com.github.johantiden.dwarfactory.game.entities.factory.Recipes;
-import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
+import com.github.johantiden.dwarfactory.game.input.MouseInputController;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.ControlSystem;
 import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
@@ -26,16 +26,12 @@ import com.github.johantiden.dwarfactory.systems.physics.AccelerationSystem;
 import com.github.johantiden.dwarfactory.systems.physics.ForceSystem;
 import com.github.johantiden.dwarfactory.systems.physics.MovementSystem;
 
-import java.util.function.Consumer;
-
 public class Dwarfactory extends ApplicationAdapter {
 
     public static final int VIEWPORT_WIDTH = 2880;
     public static final int VIEWPORT_HEIGHT = 1620;
 
     private PooledEngine engine;
-    private RenderForegroundSystem renderForegroundSystem;
-    private RenderHudSystem renderHudSystem;
 
     @Override
 	public void create () {
@@ -50,15 +46,17 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addSystem(new MovementSystem());
 
         engine.addSystem(new RenderBackgroundSystem(camera, world));
-        renderForegroundSystem = new RenderForegroundSystem(camera);
-        engine.addSystem(renderForegroundSystem);
-        renderHudSystem = new RenderHudSystem(camera);
+        RenderHudSystem renderHudSystem = new RenderHudSystem(camera);
         engine.addSystem(renderHudSystem);
+
+        MouseInputController mouseInputController = new MouseInputController(engine, camera, renderHudSystem);
+        RenderForegroundSystem renderForegroundSystem = new RenderForegroundSystem(camera, mouseInputController);
+        engine.addSystem(renderForegroundSystem);
         engine.addSystem(new ControlSystem());
         engine.addSystem(new SpeedFromControlSystem());
         engine.addSystem(new TaskSystem());
 
-        MyInputProcessor inputProcessor = new MyInputProcessor(camera, onMouseMoved());
+        MyInputProcessor inputProcessor = new MyInputProcessor(camera, mouseInputController);
         Gdx.input.setInputProcessor(inputProcessor);
 
         createGameEntities();
@@ -67,7 +65,6 @@ public class Dwarfactory extends ApplicationAdapter {
     private OrthographicCamera createCamera() {
         OrthographicCamera camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.position.set(0, 0, 0);
-//        camera.setToOrtho(false);
         camera.update();
         Entity cameraEntity = engine.createEntity();
         cameraEntity.add(new PositionComponent(0, 0));
@@ -76,13 +73,6 @@ public class Dwarfactory extends ApplicationAdapter {
         engine.addEntity(cameraEntity);
         engine.addSystem(new CameraControlSystem(camera, cameraEntity));
         return camera;
-    }
-
-    private Consumer<ImmutableVector2Int> onMouseMoved() {
-        return screenCoordinates -> {
-            renderForegroundSystem.onMouseMoved(screenCoordinates);
-            renderHudSystem.onMouseMoved(screenCoordinates);
-        };
     }
 
     private void createGameEntities() {

@@ -21,6 +21,10 @@ public class Assets {
             TextureUtil.loadTextureWithMipMap("buildings_transparency.png"),
             416, 208, 96, 96);
 
+    public static final TextureRegion HOUSE_GREEN = new TextureRegion(
+            TextureUtil.loadTextureWithMipMap("buildings_transparency_green.png"),
+            416, 208, 96, 96);
+
     public static final TextureRegion BOX = new TextureRegion(
             TextureUtil.loadTextureWithMipMap("crate.jpg"));
 
