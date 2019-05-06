@@ -25,6 +25,7 @@ import static com.github.johantiden.dwarfactory.game.entities.Boi.MAX_CARRY;
 import static com.github.johantiden.dwarfactory.game.entities.Boi.MAX_SPEED;
 
 public class BoiJobSelector {
+    public static final int IDLE_TIME = 5000;
 
     private final SelectJobContext selectJobContext;
     private final Boi boi;
@@ -89,10 +90,11 @@ public class BoiJobSelector {
             }
         }
 
+        long currentTimeMillis = System.currentTimeMillis();
         if (!isHome()) {
-            return JLists.newArrayList(new GoHomeJob(), new IdleJob());
+            return JLists.newArrayList(new GoHomeJob(currentTimeMillis), new IdleJob(currentTimeMillis));
         } else {
-            return JLists.newArrayList((Job) new IdleJob());
+            return JLists.newArrayList((Job) new IdleJob(currentTimeMillis));
         }
 
     }
@@ -198,9 +200,15 @@ public class BoiJobSelector {
     }
 
     private static class IdleJob implements Job {
+        private final long startTimeMillis;
+
+        private IdleJob(long startTimeMillis) {
+            this.startTimeMillis = startTimeMillis;
+        }
+
         @Override
         public boolean canFinishJob() {
-            return true;
+            return System.currentTimeMillis() - startTimeMillis > IDLE_TIME;
         }
 
         @Override
@@ -252,10 +260,15 @@ public class BoiJobSelector {
     }
 
     private class GoHomeJob implements Job {
+        private final long startTimeMillis;
+
+        private GoHomeJob(long startTimeMillis) {
+            this.startTimeMillis = startTimeMillis;
+        }
 
         @Override
         public boolean canFinishJob() {
-            return true;
+            return isHome() || System.currentTimeMillis() - startTimeMillis > IDLE_TIME;
         }
 
         @Override
