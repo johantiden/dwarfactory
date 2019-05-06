@@ -14,12 +14,17 @@ public class Assets {
     public static final TextureRegion FACTORY = new TextureRegion(
             TextureUtil.loadTextureWithMipMap("buildings_transparency.png"),
             0, 1304, 128, 128);
+    public static final TextureRegion FACTORY_GREEN = new TextureRegion(
+            TextureUtil.loadTextureWithMipMap("buildings_transparency_green.png"),
+            0, 1304, 128, 128);
     public static final TextureRegion HOUSE = new TextureRegion(
             TextureUtil.loadTextureWithMipMap("buildings_transparency.png"),
             416, 208, 96, 96);
 
     public static final TextureRegion BOX = new TextureRegion(
             TextureUtil.loadTextureWithMipMap("crate.jpg"));
+
+    public static final TextureRegion MOUSE_TILE_OVERLAY = new TextureRegion(TextureUtil.loadTextureWithMipMap("selection_overlay.png"));
 
     public static final float TILE_BUILDING_INSET = 5f;
 

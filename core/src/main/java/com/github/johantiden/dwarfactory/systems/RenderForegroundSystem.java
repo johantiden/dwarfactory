@@ -6,11 +6,10 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.utils.ImmutableArray;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.components.AccelerationComponent;
@@ -25,20 +24,23 @@ import com.github.johantiden.dwarfactory.components.SizeComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.components.TaskComponent;
 import com.github.johantiden.dwarfactory.components.VisualComponent;
+import com.github.johantiden.dwarfactory.game.TileCoordinate;
+import com.github.johantiden.dwarfactory.game.assets.Assets;
 import com.github.johantiden.dwarfactory.game.entities.RenderContext;
-import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
+import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
 import static com.github.johantiden.dwarfactory.util.FontUtil.font;
 
 public class RenderForegroundSystem extends EntitySystem {
     private static final boolean DRAW_DEBUG = true;
     public static final int FONT_SIZE = 32;
     private ImmutableVector2Int mouseScreenCoordinates;
-    private final Texture mouseTileTexture;
+    private final TextureRegion mouseTileTexture;
 
     private ImmutableArray<Entity> entitites;
 
@@ -68,7 +70,7 @@ public class RenderForegroundSystem extends EntitySystem {
         this.shapeRenderer = new ShapeRenderer(100);
         this.debugShapeRenderer = new ShapeRenderer(100);
         this.camera = camera;
-        this.mouseTileTexture = new Texture(Gdx.files.internal("selection_overlay.png"), true);
+        this.mouseTileTexture = Assets.MOUSE_TILE_OVERLAY;
     }
 
     public void onMouseMoved(ImmutableVector2Int screenCoordinates) {
@@ -98,15 +100,6 @@ public class RenderForegroundSystem extends EntitySystem {
         renderUnprojected();
         renderShapes();
 
-//        if (mouseScreenCoordinates != null) {
-//            TileCoordinate mouseTilePosition = CoordinateUtil.screenToTile(mouseScreenCoordinates, camera);
-//            spriteBatch.draw(mouseTileTexture,
-//                    TILE_SIZE * mouseTilePosition.x,
-//                    TILE_SIZE * mouseTilePosition.y,
-//                    TILE_SIZE,
-//                    TILE_SIZE);
-//        }
-
         if (DRAW_DEBUG) {
             debugRender();
         }
@@ -126,7 +119,20 @@ public class RenderForegroundSystem extends EntitySystem {
             visual.renderSprites(spriteBatch, new RenderContext(speed, position, size, task));
         }
 
+        renderMouseOverlay();
+
         spriteBatch.end();
+    }
+
+    private void renderMouseOverlay() {
+        if (mouseScreenCoordinates != null) {
+            TileCoordinate mouseTilePosition = CoordinateUtil.screenToTile(mouseScreenCoordinates, camera);
+            spriteBatch.draw(mouseTileTexture,
+                    TILE_SIZE * mouseTilePosition.x,
+                    TILE_SIZE * mouseTilePosition.y,
+                    TILE_SIZE,
+                    TILE_SIZE);
+        }
     }
 
     private void renderUnprojected() {
