@@ -15,7 +15,7 @@ import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.systems.RenderHudSystem;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
-import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
+import static com.github.johantiden.dwarfactory.game.world.World.TILE_SIZE;
 
 public class MouseInputController {
 

@@ -10,11 +10,11 @@ import com.github.johantiden.dwarfactory.components.AccelerationComponent;
 import com.github.johantiden.dwarfactory.components.PositionComponent;
 import com.github.johantiden.dwarfactory.components.SpeedComponent;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
-import com.github.johantiden.dwarfactory.game.World;
 import com.github.johantiden.dwarfactory.game.entities.factory.Factory;
 import com.github.johantiden.dwarfactory.game.entities.factory.House;
 import com.github.johantiden.dwarfactory.game.entities.factory.Recipes;
 import com.github.johantiden.dwarfactory.game.input.MouseInputController;
+import com.github.johantiden.dwarfactory.game.world.World;
 import com.github.johantiden.dwarfactory.systems.CameraControlSystem;
 import com.github.johantiden.dwarfactory.systems.ControlSystem;
 import com.github.johantiden.dwarfactory.systems.RenderBackgroundSystem;
@@ -32,10 +32,11 @@ public class Dwarfactory extends ApplicationAdapter {
     public static final int VIEWPORT_HEIGHT = 1620;
 
     private PooledEngine engine;
+    private World world;
 
     @Override
 	public void create () {
-        World world = new World();
+        world = new World();
 
         engine = new PooledEngine();
 
@@ -103,5 +104,9 @@ public class Dwarfactory extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         engine.update(Gdx.graphics.getDeltaTime());
+    }
+
+    @Override
+    public void dispose() {
     }
 }

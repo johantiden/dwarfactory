@@ -1,5 +1,8 @@
 package com.github.johantiden.dwarfactory.struct;
 
+import jdk.nashorn.internal.ir.annotations.Immutable;
+
+@Immutable
 public class ImmutableRectangleInt {
     public final int x;
     public final int y;
@@ -35,6 +38,14 @@ public class ImmutableRectangleInt {
                 getBottom() >= that.getBottom();
     }
 
+    public boolean contains(ImmutableVector2 that) {
+        return
+                x <= that.x &&
+                        y <= that.y &&
+                        getRight() >= that.x &&
+                        getBottom() >= that.x;
+    }
+
     public ImmutableVector2Int getTopLeft() {
         return topLeft;
     }
@@ -42,4 +53,5 @@ public class ImmutableRectangleInt {
     public ImmutableVector2Int getBottomRight() {
         return bottomRight;
     }
+
 }

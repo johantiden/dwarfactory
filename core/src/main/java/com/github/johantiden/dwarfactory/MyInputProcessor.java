@@ -31,7 +31,14 @@ class MyInputProcessor extends InputAdapter {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        mouseInputController.onMouseMoved(new ImmutableVector2Int(screenX, screenY));
         mouseInputController.finishPlacing(new ImmutableVector2Int(screenX, screenY));
+        return true;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        mouseInputController.onMouseMoved(new ImmutableVector2Int(screenX, screenY));
         return true;
     }
 

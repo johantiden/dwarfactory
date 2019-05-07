@@ -7,11 +7,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.Dwarfactory;
-import com.github.johantiden.dwarfactory.game.World;
+import com.github.johantiden.dwarfactory.game.world.World;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
-import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
+import static com.github.johantiden.dwarfactory.game.world.World.TILE_SIZE;
 
 public class RenderBackgroundSystem extends EntitySystem {
     private final SpriteBatch backgroundBatch;
@@ -44,7 +44,7 @@ public class RenderBackgroundSystem extends EntitySystem {
 
         Rectangle clip = getClipInWorld();
         world.ensureWorldIsLargeEnoughToRender(clip);
-        world.forEachBackgroundTile(clip, tile -> backgroundBatch.draw(tile.textureRegion,
+        world.forEachBackgroundTile(clip, tile -> backgroundBatch.draw(tile.tileType.textureRegion,
                 TILE_SIZE * tile.position.x,
                 TILE_SIZE * tile.position.y,
                 TILE_SIZE,

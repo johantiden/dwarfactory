@@ -1,9 +1,7 @@
 package com.github.johantiden.dwarfactory.game.assets;
 
-import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.utils.Array;
 import com.github.johantiden.dwarfactory.struct.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.util.JLists;
 import com.github.johantiden.dwarfactory.util.TextureUtil;
@@ -66,22 +64,5 @@ public class Assets {
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (8).png")),
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (9).png")),
                 new TextureRegion(TextureUtil.loadTextureWithMipMap("male/Walk (10).png")));
-    }
-
-
-
-    public static class Tiles {
-        public static final ImmutableArray<TextureRegion> TILES;
-
-        static {
-            Array<TextureRegion> array = new Array<>();
-
-            array.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_001.jpg")));
-            array.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_002.jpg")));
-            array.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_003.jpg")));
-            array.add(new TextureRegion(TextureUtil.loadTextureWithMipMap("tile_004.jpg")));
-
-            TILES = new ImmutableArray<>(array);
-        }
     }
 }

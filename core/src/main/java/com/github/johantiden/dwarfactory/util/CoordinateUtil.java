@@ -9,7 +9,7 @@ import com.github.johantiden.dwarfactory.struct.ImmutableRectangleInt;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2;
 import com.github.johantiden.dwarfactory.struct.ImmutableVector2Int;
 
-import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
+import static com.github.johantiden.dwarfactory.game.world.World.TILE_SIZE;
 
 public class CoordinateUtil {
 

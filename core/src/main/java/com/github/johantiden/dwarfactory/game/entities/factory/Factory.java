@@ -23,7 +23,7 @@ import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import java.util.List;
 
-import static com.github.johantiden.dwarfactory.game.BackgroundTile.TILE_SIZE;
+import static com.github.johantiden.dwarfactory.game.world.World.TILE_SIZE;
 
 public class Factory {
     public static final int FONT_SIZE = 30;
