@@ -4,7 +4,7 @@ import static com.badlogic.gdx.math.MathUtils.random;
 
 public enum TileFunctionalType {
     GRASS,
-    MUD,
+//    MUD,
     WATER,
     ;
 

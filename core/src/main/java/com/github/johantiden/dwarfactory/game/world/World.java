@@ -3,7 +3,6 @@ package com.github.johantiden.dwarfactory.game.world;
 import com.badlogic.gdx.math.Rectangle;
 import com.github.johantiden.dwarfactory.game.TileCoordinate;
 import com.github.johantiden.dwarfactory.struct.ImmutableRectangleInt;
-import com.github.johantiden.dwarfactory.struct.ImmutableVector2;
 import com.github.johantiden.dwarfactory.util.CoordinateUtil;
 
 import java.util.HashMap;
@@ -21,6 +20,17 @@ public class World {
 
     public World() {
         map = new HashMap<>();
+
+        populate();
+    }
+
+    private void populate() {
+//        for (int y = -100; y < 100; y++) {
+//            for (int x = -100; x < 100; x++) {
+//                TileFunctionalType tileFunctionalType = voronoiWorld.findClosest(new ImmutableVector2(x, y));
+//                map.put(new TileCoordinate(x, y), TileType.randomMatchingFunctional(tileFunctionalType));
+//            }
+//        }
     }
 
     public void forEachBackgroundTile(Rectangle clip, Consumer<BackgroundTile> consumer) {
@@ -52,12 +62,20 @@ public class World {
             if (!currentMapBounds.contains(clipTiles)) {
                 forEachTile(clipTiles, tile -> map.computeIfAbsent(tile, tileCoordinate ->
                 {
-                    TileFunctionalType functionalType = voronoiWorld.findClosest(new ImmutableVector2(tileCoordinate.x, tileCoordinate.y));
+//                    TileFunctionalType functionalType = voronoiWorld.findClosest(new ImmutableVector2(tileCoordinate.x, tileCoordinate.y));
+                    TileFunctionalType functionalType = TileFunctionalType.randomTileType();
                     TileType tileType = TileType.randomMatchingFunctional(functionalType);
                     return tileType;
                 }));
+
+                currentMapBounds = clipTiles;
+
+                Automata automata = new Automata(map);
+                for (int i = 0; i < 10; i++) {
+                    automata.iterate();
+                }
             }
-            currentMapBounds = clipTiles;
+
         }
     }
 

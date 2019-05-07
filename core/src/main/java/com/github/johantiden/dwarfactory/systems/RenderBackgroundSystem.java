@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.github.johantiden.dwarfactory.Dwarfactory;
@@ -17,12 +18,14 @@ public class RenderBackgroundSystem extends EntitySystem {
     private final SpriteBatch backgroundBatch;
     private final Camera camera;
     private final World world;
+    private final ShapeRenderer shapeRenderer;
 
     public RenderBackgroundSystem(Camera camera, World world) {
         this.world = world;
         this.camera = camera;
 
         backgroundBatch = new SpriteBatch();
+        shapeRenderer = new ShapeRenderer();
     }
 
     @Override
@@ -35,7 +38,28 @@ public class RenderBackgroundSystem extends EntitySystem {
 
     @Override
     public void update(float deltaTime) {
-        drawBackground();
+//        drawBackground();
+        drawBackgroundShapes();
+    }
+
+    private void drawBackgroundShapes() {
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setProjectionMatrix(camera.combined);
+
+
+        Rectangle clip = getClipInWorld();
+        world.ensureWorldIsLargeEnoughToRender(clip);
+
+        world.forEachBackgroundTile(clip, tile -> {
+            shapeRenderer.setColor(tile.tileType.color);
+            shapeRenderer.rect(
+                    TILE_SIZE * tile.position.x,
+                    TILE_SIZE * tile.position.y,
+                    TILE_SIZE,
+                    TILE_SIZE);
+        });
+
+        shapeRenderer.end();
     }
 
     private void drawBackground() {

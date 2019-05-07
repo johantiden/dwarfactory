@@ -37,9 +37,19 @@ public class VoronoiWorld {
         }
     }
 
-    public TileFunctionalType findClosest(ImmutableVector2 worldPosition) {
+    public TileFunctionalType findClosest(ImmutableVector2 other) {
         return voronoiCentroids.stream()
-                .min(closestTo(worldPosition))
+                .min(Comparator.comparing(e -> {
+                    ImmutableVector2 p = e.getKey();
+
+                    float dx = p.x - other.x;
+                    float dy = p.y - other.y;
+                    return /*Math.abs(dx) + Math.abs(dy)*/
+                            + dx*dx + dy*dy
+//                            + Math.abs(dx*dx*dx*dx)
+//                            + Math.abs(dy*dy*dy*dy);
+                    ;
+                }))
                 .get()
                 .getValue();
     }

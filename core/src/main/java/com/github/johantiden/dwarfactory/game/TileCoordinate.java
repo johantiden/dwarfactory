@@ -31,4 +31,20 @@ public class TileCoordinate {
     public String toString() {
         return "(" + x + "," + y + ")";
     }
+
+    public TileCoordinate north() {
+        return new TileCoordinate(x, y+1);
+    }
+
+    public TileCoordinate west() {
+        return new TileCoordinate(x-1, y);
+    }
+
+    public TileCoordinate east() {
+        return new TileCoordinate(x+1, y);
+    }
+
+    public TileCoordinate south() {
+        return new TileCoordinate(x, y-1);
+    }
 }
