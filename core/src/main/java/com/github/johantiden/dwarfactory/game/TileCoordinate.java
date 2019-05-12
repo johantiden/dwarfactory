@@ -1,5 +1,7 @@
 package com.github.johantiden.dwarfactory.game;
 
+import com.badlogic.gdx.math.Vector2;
+
 import java.util.Objects;
 
 public class TileCoordinate {
@@ -46,5 +48,9 @@ public class TileCoordinate {
 
     public TileCoordinate south() {
         return new TileCoordinate(x, y-1);
+    }
+
+    public Vector2 asVector() {
+        return new Vector2(x, y);
     }
 }
